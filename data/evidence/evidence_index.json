@@ -1,0 +1,107 @@
+{
+  "EV-C101-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "sssssssc101",
+    "phash": "aaaaaaaaaaaaaaaa",
+    "exif": {
+      "DateTimeOriginal": "2026-10-06T11:00:00",
+      "gps_lat": 28.6,
+      "gps_lon": 77.2,
+      "_demo_light_class": "DIRECT_SUN_HARD_SHADOWS",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2026-10-06T11:00:00",
+    "batch_id": "B-0041"
+  },
+  "EV-C101-INVOICE": {
+    "kind": "INVOICE",
+    "sha256": "sssssssc101inv",
+    "exif": {},
+    "extracted": {
+      "invoice_number": "INV-C101-0001",
+      "total_weight_t": 0.48,
+      "date": "2026-10-15",
+      "gstin": "99AAAAA0000A1ZR"
+    },
+    "received_at_server": "2026-10-07T00:00:00+05:30",
+    "batch_id": "B-0041"
+  },
+  "EV-C105-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "sssssssc105",
+    "phash": "bbbbbbbbbbbbbbbb",
+    "exif": {
+      "DateTimeOriginal": "2025-06-16T20:22:00",
+      "gps_lat": 28.73,
+      "gps_lon": 77.78,
+      "_demo_light_class": "DIRECT_SUN_HARD_SHADOWS",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2025-06-16T20:22:00",
+    "batch_id": null
+  },
+  "EV-C105b-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "sssssssc105b",
+    "phash": "cccccccccccccccc",
+    "exif": {
+      "DateTimeOriginal": "2025-06-16T19:48:00",
+      "gps_lat": 28.73,
+      "gps_lon": 77.78,
+      "_demo_light_class": "BRIGHT_DIFFUSE_DAYLIGHT",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2025-06-16T19:48:00",
+    "batch_id": null
+  },
+  "EV-0101-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "dupfile0001",
+    "phash": "dddddddddddddddd",
+    "exif": {
+      "DateTimeOriginal": "2026-07-18T09:00:00",
+      "gps_lat": 28.65,
+      "gps_lon": 77.3,
+      "_demo_light_class": "BRIGHT_DIFFUSE_DAYLIGHT",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2026-07-18T09:00:00",
+    "batch_id": "P-0101"
+  },
+  "EV-0102-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "dupfile0002-reencoded",
+    "phash": "dddddddddddddddd",
+    "exif": {
+      "DateTimeOriginal": "2026-08-14T09:00:00",
+      "gps_lat": 28.65,
+      "gps_lon": 77.3,
+      "_demo_light_class": "BRIGHT_DIFFUSE_DAYLIGHT",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2026-08-14T09:00:00",
+    "batch_id": "P-0102"
+  },
+  "EV-0103-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "dupfile0001",
+    "phash": "dddddddddddddddd",
+    "exif": {
+      "DateTimeOriginal": "2026-09-12T09:00:00",
+      "gps_lat": 28.65,
+      "gps_lon": 77.3,
+      "_demo_light_class": "BRIGHT_DIFFUSE_DAYLIGHT",
+      "OffsetTimeOriginal": "+05:30"
+    },
+    "received_at_server": "2026-09-12T09:00:00",
+    "batch_id": "P-0103"
+  },
+  "EV-C108-PHOTO": {
+    "kind": "PHOTO",
+    "sha256": "sssssssc108",
+    "phash": "eeeeeeeeeeeeeeee",
+    "exif": {},
+    "received_at_server": "2026-09-20T00:00:00+05:30",
+    "batch_id": null
+  }
+}

@@ -1,0 +1,133 @@
+# Every constant any ClaimGuard rule or impact-panel number uses must have
+# an entry here (SOLUTION.md principle P3: "No source, no rule").
+#
+# status: CITED      -> read by this team, document + locator given
+#         DEMO_VALUE  -> not yet backed by a document we have read; a rule
+#                        that uses it still runs, but its result and the UI
+#                        carry a visible DEMO VALUE badge
+#
+# Facility-specific numbers (rated_t_per_hr, hours_per_day, etc.) live in
+# data/facilities.json, not here, because they differ per plant. This file
+# holds only the formula source and the fractions/bands rules apply to any
+# facility's numbers.
+#
+# Changing a `status` from DEMO_VALUE to CITED requires having actually read
+# the cited document (docs/team/MRUDDUNI.md section 3.1).
+
+- id: cpcb-capacity-guideline
+  title: "CPCB guidance on recycler capacity, as filed before the National Green Tribunal"
+  status: CITED
+  date: "2025-07-02"
+  locator: "worked example, capacity formula (rate x hours/day x operating days)"
+  url: null
+  value: null
+  note: >
+    problem_statement.md section "Scope for a four-day build": the worked
+    example in the regulator's own capacity guideline prints
+    20 h x 4 t/h x 330 d = 46,200 t. The correct product is 26,400 t. R1 uses
+    the correct arithmetic and shows the erratum on the claim card. We have
+    not read the primary filing; the figure comes from the problem statement,
+    which itself cites the CPCB affidavit of 2 July 2025.
+
+- id: lead-fraction-lead-acid-max
+  title: "Maximum recoverable lead fraction, lead-acid battery, by weight"
+  status: DEMO_VALUE
+  value: 0.65
+  note: >
+    Not yet backed by a published CPCB or BIS composition table. A
+    conventional flooded lead-acid battery is commonly described as roughly
+    60-70% lead and lead compounds by weight; 0.65 is a placeholder upper
+    bound for R2(b) until a cited composition table replaces it. Find and
+    cite before the demo, or keep the DEMO VALUE badge visible.
+
+- id: lead-per-battery-kg
+  title: "Lead content of one used e-rickshaw lead-acid battery"
+  status: CITED
+  date: "2022-12-01"
+  locator: "reported by a Delhi scrap dealer to the reporters"
+  url: null
+  value: 20
+  note: "kg of lead per battery. Newslaundry, December 2022, via problem_statement.md section 4."
+
+- id: erickshaw-battery-eol-count-per-year
+  title: "Lead-acid e-rickshaw batteries reaching end of life each year, India"
+  status: CITED
+  date: "2023-08-01"
+  locator: "WRI India estimate"
+  url: null
+  value: 6500000
+  note: "About 65 lakh a year. WRI India, August 2023, via problem_statement.md section 4."
+
+- id: erickshaw-battery-total-weight-kg
+  title: "Approximate total weight of one used e-rickshaw lead-acid battery"
+  status: DEMO_VALUE
+  value: 30
+  note: >
+    Used only to size demo handover events (CONTRACT.md section 8), not in
+    any rule. SOLUTION.md's own Journey A example ("4 batteries, about 80 kg")
+    implies 20 kg per battery, which is too light if lead content alone is
+    already 20 kg per battery (see lead-per-battery-kg above). 30 kg total is
+    a more plausible whole-battery weight; told to Mrudduni, not yet sourced.
+
+- id: energy-band-lead-smelting-kwh-per-t
+  title: "Plausible electricity use per tonne of output, small-scale lead secondary smelting"
+  status: DEMO_VALUE
+  value: [150, 450]
+  note: >
+    [min, max] kWh per tonne of processed output. Not yet calibrated against
+    real Indian plant data (SOLUTION.md section 20: "Real energy-per-tonne
+    bands ... R3 stays SOFT and labelled until calibrated"). R3 is SOFT-only
+    regardless, so a wrong band produces a wrong amber flag, never a wrong
+    HARD flag.
+
+- id: energy-band-ewaste-dismantling-kwh-per-t
+  title: "Plausible electricity use per tonne of output, e-waste dismantling only (no smelting)"
+  status: DEMO_VALUE
+  value: [20, 80]
+  note: >
+    Used for the Hapur-style case (C-104): tonnage consistent with dismantling
+    only, not full recovery. Not yet calibrated.
+
+- id: ipcc-gwp100-r32
+  title: "100-year global warming potential, R-32 (HFC-32)"
+  status: DEMO_VALUE
+  value: 771
+  note: >
+    Secondary source only (not the primary IPCC table) as of this session:
+    several refrigerant fact sheets report 771 for AR6 GWP-100. Verify
+    against IPCC AR6 WG1 Chapter 7 Supplementary Material, Table 7.SM.7,
+    before marking CITED.
+
+- id: ipcc-gwp100-r410a
+  title: "100-year global warming potential, R-410A"
+  status: DEMO_VALUE
+  value: 2255
+  note: "Same caveat as ipcc-gwp100-r32. Secondary sources give about 2,255 for AR6."
+
+- id: ipcc-gwp100-r22
+  title: "100-year global warming potential, R-22 (HCFC-22)"
+  status: DEMO_VALUE
+  value: 1960
+  note: >
+    Secondary sources disagree: about 1,960 under AR6 vs an older, commonly
+    quoted 1,810 (which looks AR4-based). Verify against the primary IPCC
+    AR6 table before marking CITED, and before the demo pick one and say why.
+
+- id: ac-refrigerant-default-charge-kg
+  title: "Default refrigerant charge, one home split AC"
+  status: CITED
+  date: null
+  locator: "problem_statement.md section 4, 'What the environment pays'"
+  url: null
+  value: 0.9
+  note: "0.9 kg default charge, used only when a technician cannot read the nameplate."
+
+- id: hapur-plant-coordinates
+  title: "Approximate coordinates used for the Hapur-style R5 photo-light demo"
+  status: DEMO_VALUE
+  value: [28.73, 77.78]
+  note: >
+    [lat, lon]. Approximate district location, used only to make the R5 solar
+    demo (C-105, C-105b) match the Hapur case's dates in problem_statement.md.
+    Not a real registered plant's coordinates; REC-03 in facilities.json is
+    fictional.

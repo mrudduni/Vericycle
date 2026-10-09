@@ -1,0 +1,662 @@
+{
+  "batches": {
+    "B-0041": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-02T09:40:00+05:30",
+          "at_server": "2026-10-02T09:40:00+05:30",
+          "actor_party_id": "COL-118",
+          "counterparty_party_id": "HND-7f3a9c",
+          "fields": {
+            "count": {
+              "value": 4,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 120,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "DRIVER",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "TRANSFER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-04T15:10:00+05:30",
+          "at_server": "2026-10-04T15:10:00+05:30",
+          "actor_party_id": "COL-118",
+          "fields": {
+            "weight_kg": {
+              "value": 118,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 3,
+          "type": "INTAKE",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T11:05:00+05:30",
+          "at_server": "2026-10-06T11:05:00+05:30",
+          "actor_party_id": "REC-01",
+          "fields": {
+            "weight_kg": {
+              "value": 117,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "B-0042": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-03T10:14:00+05:30",
+          "at_server": "2026-10-03T10:14:00+05:30",
+          "actor_party_id": "COL-118",
+          "counterparty_party_id": "HND-2b81d0",
+          "fields": {
+            "count": {
+              "value": 6,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 180,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "DRIVER",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "TRANSFER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-04T15:20:00+05:30",
+          "at_server": "2026-10-04T15:20:00+05:30",
+          "actor_party_id": "COL-118",
+          "fields": {
+            "weight_kg": {
+              "value": 176,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 3,
+          "type": "INTAKE",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T11:30:00+05:30",
+          "at_server": "2026-10-06T11:30:00+05:30",
+          "actor_party_id": "REC-01",
+          "fields": {
+            "weight_kg": {
+              "value": 175,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "B-0043": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-03T17:02:00+05:30",
+          "at_server": "2026-10-03T17:02:00+05:30",
+          "actor_party_id": "COL-118",
+          "counterparty_party_id": "HND-c4e5f6",
+          "fields": {
+            "count": {
+              "value": 4,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 120,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "SAME_DEVICE",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "DRIVER",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "SAME_DEVICE",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "INTAKE",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-07T10:00:00+05:30",
+          "at_server": "2026-10-07T10:00:00+05:30",
+          "actor_party_id": "REC-01",
+          "fields": {
+            "weight_kg": {
+              "value": 118,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "B-0046": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-05T12:00:00+05:30",
+          "at_server": "2026-10-05T12:00:00+05:30",
+          "actor_party_id": "COL-118",
+          "counterparty_party_id": "HND-91aa07",
+          "fields": {
+            "count": {
+              "value": 4,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 120,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_LINK",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "DRIVER",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_LINK",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "TRANSFER",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T09:00:00+05:30",
+          "at_server": "2026-10-06T09:00:00+05:30",
+          "actor_party_id": "COL-118",
+          "fields": {
+            "weight_kg": {
+              "value": 119,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 3,
+          "type": "SPLIT",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T09:30:00+05:30",
+          "at_server": "2026-10-06T09:30:00+05:30",
+          "actor_party_id": "AGG-01",
+          "child_batch_ids": [
+            "B-0046.1",
+            "B-0046.2"
+          ],
+          "fields": {
+            "weight_kg": {
+              "value": 118,
+              "unit": "kg",
+              "asserted_by_role": "AGGREGATOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "B-0046.1": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "SPLIT",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T09:30:00+05:30",
+          "at_server": "2026-10-06T09:30:00+05:30",
+          "actor_party_id": "AGG-01",
+          "parent_batch_ids": [
+            "B-0046"
+          ],
+          "fields": {
+            "weight_kg": {
+              "value": 60,
+              "unit": "kg",
+              "asserted_by_role": "AGGREGATOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "B-0046.2": {
+      "material": "BATTERY_LEAD_ACID",
+      "events": [
+        {
+          "seq": 1,
+          "type": "SPLIT",
+          "material": "BATTERY_LEAD_ACID",
+          "at_device": "2026-10-06T09:30:00+05:30",
+          "at_server": "2026-10-06T09:30:00+05:30",
+          "actor_party_id": "AGG-01",
+          "parent_batch_ids": [
+            "B-0046"
+          ],
+          "fields": {
+            "weight_kg": {
+              "value": 58,
+              "unit": "kg",
+              "asserted_by_role": "AGGREGATOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "P-0101": {
+      "material": "EWASTE_PHONE",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-07-14T13:00:00+05:30",
+          "at_server": "2026-07-14T13:00:00+05:30",
+          "actor_party_id": "COL-207",
+          "counterparty_party_id": "HND-5d3e12",
+          "fields": {
+            "count": {
+              "value": 12,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 2.1,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "RETAIL_EXCHANGE",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "TRANSFER",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-07-16T10:00:00+05:30",
+          "at_server": "2026-07-16T10:00:00+05:30",
+          "actor_party_id": "COL-207",
+          "fields": {
+            "weight_kg": {
+              "value": 2.08,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 3,
+          "type": "INTAKE",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-07-18T10:00:00+05:30",
+          "at_server": "2026-07-18T10:00:00+05:30",
+          "actor_party_id": "REC-02",
+          "fields": {
+            "weight_kg": {
+              "value": 2.05,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [
+            "EV-0101-PHOTO"
+          ],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "P-0102": {
+      "material": "EWASTE_PHONE",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-08-11T10:00:00+05:30",
+          "at_server": "2026-08-11T10:00:00+05:30",
+          "actor_party_id": "COL-207",
+          "counterparty_party_id": null,
+          "fields": {
+            "count": {
+              "value": 9,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 1.6,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "RETAIL_EXCHANGE",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "INTAKE",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-08-14T10:00:00+05:30",
+          "at_server": "2026-08-14T10:00:00+05:30",
+          "actor_party_id": "REC-02",
+          "fields": {
+            "weight_kg": {
+              "value": 1.58,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [
+            "EV-0102-PHOTO"
+          ],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "P-0103": {
+      "material": "EWASTE_PHONE",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-09-09T10:00:00+05:30",
+          "at_server": "2026-09-09T10:00:00+05:30",
+          "actor_party_id": "COL-207",
+          "counterparty_party_id": null,
+          "fields": {
+            "count": {
+              "value": 15,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "weight_kg": {
+              "value": 2.6,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "source_category": {
+              "value": "RETAIL_EXCHANGE",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        },
+        {
+          "seq": 2,
+          "type": "INTAKE",
+          "material": "EWASTE_PHONE",
+          "at_device": "2026-09-12T10:00:00+05:30",
+          "at_server": "2026-09-12T10:00:00+05:30",
+          "actor_party_id": "REC-02",
+          "fields": {
+            "weight_kg": {
+              "value": 2.57,
+              "unit": "kg",
+              "asserted_by_role": "RECYCLER",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "WEIGHED"
+            }
+          },
+          "evidence_ids": [
+            "EV-0103-PHOTO"
+          ],
+          "prev_hash": "FIXTURE",
+          "hash": "FIXTURE"
+        }
+      ]
+    },
+    "A-0001": {
+      "material": "AC_REFRIGERANT",
+      "events": [
+        {
+          "seq": 1,
+          "type": "HANDOVER",
+          "material": "AC_REFRIGERANT",
+          "at_device": "2026-10-04T16:00:00+05:30",
+          "at_server": "2026-10-04T16:00:00+05:30",
+          "actor_party_id": "COL-330",
+          "fields": {
+            "count": {
+              "value": 1,
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "gas_type": {
+              "value": "R-32",
+              "unit": null,
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            },
+            "charge_kg": {
+              "value": 0.9,
+              "unit": "kg",
+              "asserted_by_role": "COLLECTOR",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
+              "basis": "STATED"
+            }
+          },
+          "evidence_ids": [],
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "FIXTURE"
+        }
+      ]
+    }
+  }
+}

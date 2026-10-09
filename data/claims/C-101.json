@@ -1,0 +1,27 @@
+{
+  "claim_id": "C-101",
+  "recycler_party_id": "REC-01",
+  "product": "BATTERY_LEAD_ACID",
+  "period_start": "2026-10-01T00:00:00+05:30",
+  "period_end": "2026-10-31T23:59:59+05:30",
+  "input_t": 0.5,
+  "processed_t": 0.5,
+  "output": {
+    "LEAD": 0.3
+  },
+  "batch_ids": [
+    "B-0041",
+    "B-0042",
+    "B-0043"
+  ],
+  "evidence_ids": [
+    "EV-C101-PHOTO",
+    "EV-C101-INVOICE"
+  ],
+  "opening_stock_t": 0.0,
+  "closing_stock_t": 0.0,
+  "documented_losses_t": 0.0,
+  "electricity_kwh": 80,
+  "diesel_generator_logged": false,
+  "submitted_at": "2026-10-07T09:00:00+05:30"
+}
