@@ -1,0 +1,45 @@
+# Node / web
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# CDK
+cdk.out/
+cdk.context.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.build/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Agent tool files (each person keeps their own; see docs/team/*.md section 1)
+CLAUDE.md
+AGENTS.md
+.kiro/
+.mcp.json
+.claude/
+
+# Personal data and raw recordings never go in git
+*.ogg
+*.opus
+*.webm
+*.m4a
+*.wav
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
