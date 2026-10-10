@@ -32,6 +32,7 @@ echo "account $ACCOUNT  identity $(aws sts get-caller-identity --profile "$PROFI
 # Short-lived credentials for CDK and Python, in this shell only (never written to disk).
 eval "$(aws configure export-credentials --profile "$PROFILE" --format env)" || fail "export-credentials"
 export AWS_REGION=$REGION AWS_DEFAULT_REGION=$REGION CDK_DEFAULT_ACCOUNT=$ACCOUNT CDK_DEFAULT_REGION=$REGION
+unset AWS_PROFILE   # everything below uses the exported short-lived credentials
 
 say "3/9 can we use ap-south-1 (Mumbai)?"
 run aws dynamodb list-tables --region $REGION --max-items 1 >/dev/null || fail "ap-south-1 is not usable from this account (new-experience project region?). Tell Claude."
