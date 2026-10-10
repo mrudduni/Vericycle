@@ -240,6 +240,10 @@ export class ClaimsStack extends Stack {
       [`Resource::<${this.getLogicalId(table.node.defaultChild as ddb.CfnTable)}.Arn>/index/*`, 'Indexes (GSI1, GSI3) of the stage claims table.'],
       [`Resource::<${this.getLogicalId(evidenceBucket.node.defaultChild as s3.CfnBucket)}.Arn>/*`, 'Objects of the stage claim-evidence bucket.'],
     ];
+    if (live) {
+      const capParam = `SsmParameterValue${`/openaeye/${ledgerStage}/capture/evidence-bucket`.replace(/[^A-Za-z0-9]/g, '')}C96584B6F00A464EAD1953AFF4B05118Parameter`;
+      iam5.push([`Resource::arn:aws:s3:::<${capParam}>/evidence/*`, 'Read-only on weigh slips and photos under evidence/ of the ChainTrack capture bucket for this stage.']);
+    }
     for (const [k, why] of iam5) nag(this, `AwsSolutions::AwsSolutions-IAM5[${k}]`, why);
     nag(this, 'AwsSolutions::AwsSolutions-IAM4[Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole]',
       'AWSLambdaBasicExecutionRole is the standard managed policy for CloudWatch Logs (also used by the S3 auto-delete custom resource).');
