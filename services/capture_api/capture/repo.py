@@ -19,6 +19,8 @@ class Repo(Protocol):
     def claim_token(self, pk: str, used_at: str, now_epoch: int) -> dict | None:
         """Atomically set used_at if unset and not expired; return the item, or None if used/expired/missing."""
     def increment(self, pk: str, sk: str, attr: str, ttl_epoch: int) -> int: ...
+    def add_to_set(self, pk: str, attr: str, value: str) -> int:
+        """Add ``value`` to a string set on (pk, META); return the set size."""
 
 
 class MemoryRepo:
@@ -57,6 +59,13 @@ class MemoryRepo:
             it = self.items.setdefault((pk, sk), {"PK": pk, "SK": sk, attr: 0, "expires_at": ttl_epoch})
             it[attr] += 1
             return it[attr]
+
+
+    def add_to_set(self, pk, attr, value):
+        with self._lock:
+            it = self.items.setdefault((pk, "META"), {"PK": pk, "SK": "META"})
+            it.setdefault(attr, set()).add(value)
+            return len(it[attr])
 
 
 class _MemLedger(MemoryStore):
@@ -105,6 +114,14 @@ class DynamoRepo:
             return self._plain(r["Attributes"])
         except self.ddb.exceptions.ConditionalCheckFailedException:
             return None
+
+    def add_to_set(self, pk, attr, value):
+        r = self.ddb.update_item(
+            TableName=self.table, Key=self._item({"PK": pk, "SK": "META"}),
+            UpdateExpression="ADD #a :v", ExpressionAttributeNames={"#a": attr},
+            ExpressionAttributeValues={":v": {"SS": [value]}}, ReturnValues="ALL_NEW",
+        )
+        return len(r["Attributes"][attr]["SS"])
 
     def increment(self, pk, sk, attr, ttl_epoch):
         r = self.ddb.update_item(

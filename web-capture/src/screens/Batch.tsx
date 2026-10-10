@@ -23,7 +23,7 @@ export function fieldText(name: string, fv: any, t: (k: string) => string): stri
 }
 
 export default function Batch({ id }: { id: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const s = getSession();
   const { data, error, loading } = useAsync(() => get(`/batches/${encodeURIComponent(id)}`), [id]);
   if (!s) return <main><p>{t('signIn')}…</p><Link className="btn" to="/">{t('signIn')}</Link></main>;
@@ -39,6 +39,13 @@ export default function Batch({ id }: { id: string }) {
         {data.parent_batch_ids?.length > 0 && <><dt>←</dt><dd>{data.parent_batch_ids.map((p: string) => <Link key={p} to={`/b/${p}`}>{p} </Link>)}</dd></>}
         {data.child_batch_ids?.length > 0 && <><dt>→</dt><dd>{data.child_batch_ids.map((c: string) => <Link key={c} to={`/b/${c}`}>{c} </Link>)}</dd></>}
       </dl>
+      {data.anomalies?.length > 0 && (
+        <div className="callout" role="note" style={{ borderColor: 'var(--oae-flag-soft)', marginTop: 12 }}>
+          {data.anomalies.map((a: any, i: number) => (
+            <div key={i} style={{ color: 'var(--oae-flag-soft)', fontWeight: 600 }}>⚠ #{a.seq}: {a.text[i18n.language === 'hi' ? 'hi' : 'en']}</div>
+          ))}
+        </div>
+      )}
       <h2>{t('batch.events')}</h2>
       <ol className="timeline">
         {data.view.map((ev: any) => (

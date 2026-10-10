@@ -196,7 +196,7 @@ class WhatsAppIngest:
         same = bool(collector_link and collector_link.get("phone_hmac") == sender_hmac)
         channel = "SAME_DEVICE" if same else "OWN_DEVICE_WHATSAPP"
         try:
-            out = self.svc.confirm_post(token, "yes", channel=channel)
+            out = self.svc.confirm_post(token, "yes", channel=channel, sender_hmac=sender_hmac)
         except Exception as e:  # noqa: BLE001  (used / expired tokens become a polite reply)
             self._reply(m, text_msg(m.sender, getattr(e, "message", "Could not record this. Please try again.")))
             return "error"

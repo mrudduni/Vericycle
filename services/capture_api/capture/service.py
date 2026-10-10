@@ -10,6 +10,7 @@ from ledger.verify_chain import verify_events
 from ledger.writer import IST, LedgerBusyError, append_event, now_ist
 
 from . import ids, materials as M
+from . import anomalies
 from .authz import Principal, handler_token
 from .errors import ApiError, bad, forbidden, gone, not_found, unprocessable
 from .status import CHIP_TEXT, asked_fields, event_status, evidence_badge, effective_events, field_status
@@ -328,6 +329,7 @@ class CaptureService:
             "receipt_token": head.get("receipt_token"),
             "events": [{k: v for k, v in e.items() if k != "kms_sig"} for e in events],
             "view": [self.view_event(eff[e["seq"]]) for e in events],
+            "anomalies": anomalies.flags_for(self.repo, batch_id, events),
         }
 
     def lineage(self, principal: Principal, root: str) -> dict:
@@ -418,7 +420,7 @@ class CaptureService:
         }
 
     def confirm_post(self, token: str, answer: str, *, device_id: str | None = None,
-                     channel: str | None = None) -> dict:
+                     channel: str | None = None, sender_hmac: str | None = None) -> dict:
         """``channel`` is set only by the WhatsApp ingest (OWN_DEVICE_WHATSAPP / SAME_DEVICE)."""
         if answer not in ("yes", "no"):
             raise bad("INVALID_ANSWER", "answer must be yes or no.")
@@ -455,6 +457,9 @@ class CaptureService:
                 written.append(self._append(batch_id, corr(n, fv, "HANDLER_CONFIRMED")))
         else:
             written.append(self._append(batch_id, corr("handover", None, "HANDLER_REJECTED")))
+        if answer == "yes":
+            anomalies.record_confirmation(self.repo, batch_id=batch_id, seq=seq, handler_id=handler,
+                                          key=anomalies.device_key(device_id, sender_hmac))
         eff = next(e for e in effective_events(self._events(batch_id)) if e["seq"] == seq)
         view = self.view_event(eff)
         return {"recorded": answer, "channel": channel, "status": view.get("confirmation", {}).get("status"),
