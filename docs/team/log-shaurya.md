@@ -44,6 +44,12 @@
 - Blocked: IAM user, GitHub push access, WhatsApp number, deadline time, real voice recordings for the eval, untrained-user test.
 - For Mrudduni: (1) `.github/workflows/chaintrack.yml` is new and only runs on ChainTrack paths. (2) WhatsApp QR images are written to the capture evidence bucket under `qr/`; tomorrow's ObjectCreated → evidence-processor rule should match only `evidence/` (weigh slips, photos), not `qr/`, `audio/` or `transcripts/`. (3) The ledger table also holds `ANOMALY#`, `CONFDEV#`, `PHONE#`, `DRAFT#`, `WACODE#`, `WAMSG#`, `RATE#` items; ClaimGuard can ignore any PK it does not know.
 
+## 2026-10-10 ~17:30 IST: handover pickup
+
+- Found: stage `shaurya` is already deployed (Core, CaptureWeb, Capture) in account 206690614182, region **ap-southeast-2**, not 773870812969/ap-south-1. That account's SCP denies ap-south-1. The deploy fixes behind it were on an unpushed local branch (`integration/oct10`); six ChainTrack commits are ported here (region as a test-stage setting, ledger batch-head DynamoDB fix + test, `deploy_all.sh`, clean npm install). The seventh (nag account/region) was already on `main`. That branch's ClaimGuard commits were not ported; `main` has Mrudduni's newer version.
+- Works: ChainTrack 114 passed, ClaimGuard 58 passed; both CDK apps synth with cdk-nag; both webs build from a clean install. The last `deploy_web` failure (`rolldown` native binding missing) came from stale `node_modules`, not the code.
+- Blocked: `prod` must be ap-south-1 (CONTRACT §2, enforced in `bin/app.ts`), and ClaimGuard hardcodes ap-south-1. Mrudduni and Shaurya need to decide: get 773870812969 activated, or agree a CONTRACT change to run `prod` in ap-southeast-2.
+
 ## Third-party libraries and licences
 
 | Library | Used in | Licence |
