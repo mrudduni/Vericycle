@@ -5,7 +5,7 @@ name: chaintrack
 
 on:
   push:
-    paths: &paths
+    paths:
       - "services/ledger/**"
       - "services/capture_api/**"
       - "services/extract/**"
@@ -17,7 +17,17 @@ on:
       - "tests/chaintrack/**"
       - ".github/workflows/chaintrack.yml"
   pull_request:
-    paths: *paths
+    paths:
+      - "services/ledger/**"
+      - "services/capture_api/**"
+      - "services/extract/**"
+      - "services/ingest/**"
+      - "policies/**"
+      - "infra/chaintrack/**"
+      - "web-capture/**"
+      - "scripts/chaintrack/**"
+      - "tests/chaintrack/**"
+      - ".github/workflows/chaintrack.yml"
 
 permissions:
   contents: read
