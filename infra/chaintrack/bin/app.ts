@@ -10,7 +10,11 @@ const app = new App();
 const stage: string = app.node.tryGetContext('stage');
 if (!stage || !/^[a-z][a-z0-9-]{1,15}$/.test(stage)) throw new Error('pass -c stage=<shaurya|prod>');
 if (stage === 'mrudduni') throw new Error('stage "mrudduni" belongs to the ClaimGuard app; never deploy ChainTrack there');
-const env = { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'ap-south-1' };
+// CONTRACT §2: ap-south-1 for every OpenAEye resource. -c region=... exists only for test stages in
+// accounts that cannot use Mumbai (e.g. a new-experience account locked to its project region).
+const region: string = app.node.tryGetContext('region') ?? 'ap-south-1';
+if (stage === 'prod' && region !== 'ap-south-1') throw new Error('prod must be in ap-south-1 (CONTRACT §2)');
+const env = { account: process.env.CDK_DEFAULT_ACCOUNT, region };
 const webOrigins = String(app.node.tryGetContext('webOrigins')).split(',').map((s) => s.trim()).filter(Boolean);
 const digestRetentionDays = Number(app.node.tryGetContext('digestRetentionDays') ?? 1);
 if (digestRetentionDays > 1 && !app.node.tryGetContext('approvedLongRetention')) {
@@ -25,7 +29,7 @@ new CaptureStack(app, `OAE-${S}-Capture`, {
   env, stage, core, webOrigins,
   webUrl: ctx('webUrl', webOrigins[0] ?? 'http://localhost:5173'),
   modelId: ctx('modelId', 'offline'),
-  bedrockRegion: ctx('bedrockRegion', 'ap-south-1'),
+  bedrockRegion: ctx('bedrockRegion', region),
   waNumber: ctx('waNumber', ''),
   waPhoneNumberId: ctx('waPhoneNumberId', ''),
   alarmEmail: ctx('alarmEmail', ''),

@@ -78,10 +78,11 @@ class _MemLedger(MemoryStore):
 class DynamoRepo:
     """Same contract on DynamoDB. boto3 is imported lazily so tests never need it."""
 
-    def __init__(self, table_name: str, region: str = "ap-south-1"):
+    def __init__(self, table_name: str, region: str | None = None):
         from ledger.aws import DynamoStore, _item, _plain  # noqa: PLC0415
 
-        self.store = DynamoStore(table_name, region)
+        from ledger.aws import DEFAULT_REGION  # noqa: PLC0415
+        self.store = DynamoStore(table_name, region or DEFAULT_REGION)
         self.ddb = self.store.ddb
         self.table = table_name
         self._item, self._plain = _item, _plain

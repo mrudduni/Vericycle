@@ -110,7 +110,8 @@ def extract(text: str, model_id: str, client=None) -> dict:
     """Run Bedrock Converse with the forced tool. ``client`` is a bedrock-runtime client."""
     if client is None:
         import boto3  # noqa: PLC0415
-        client = boto3.client("bedrock-runtime", region_name="ap-south-1")
+        import os  # noqa: PLC0415
+        client = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "ap-south-1")
     resp = client.converse(
         modelId=model_id,
         system=[{"text": SYSTEM}],

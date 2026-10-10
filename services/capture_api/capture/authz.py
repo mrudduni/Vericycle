@@ -94,11 +94,12 @@ def _avp_value(v: Any) -> dict:
 
 
 class AvpAuthorizer:
-    def __init__(self, policy_store_id: str, region: str = "ap-south-1"):
+    def __init__(self, policy_store_id: str, region: str | None = None):
         import boto3  # noqa: PLC0415
 
         self.store_id = policy_store_id
-        self.client = boto3.client("verifiedpermissions", region_name=region)
+        from ledger.aws import DEFAULT_REGION  # noqa: PLC0415
+        self.client = boto3.client("verifiedpermissions", region_name=region or DEFAULT_REGION)
 
     def is_authorized(self, principal, action, resource, context) -> bool:
         p, a, (rk, rid), ctx, ents = build_request(principal, action, resource, context)

@@ -3,7 +3,7 @@
 #   bash scripts/chaintrack/deploy_all.sh shaurya
 # Writes a log (no secrets) to ../deploy-<stage>.log next to the repo so Claude can read it.
 set -uo pipefail
-STAGE="${1:-shaurya}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION=ap-south-1
+STAGE="${1:-shaurya}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION="${OAE_REGION:-ap-south-1}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG="$ROOT/../deploy-$STAGE.log"
 S="$(tr '[:lower:]' '[:upper:]' <<< "${STAGE:0:1}")${STAGE:1}"
@@ -35,9 +35,9 @@ eval "$(aws configure export-credentials --profile "$PROFILE" --format env)" || 
 export AWS_REGION=$REGION AWS_DEFAULT_REGION=$REGION CDK_DEFAULT_ACCOUNT=$ACCOUNT CDK_DEFAULT_REGION=$REGION
 unset AWS_PROFILE   # everything below uses the exported short-lived credentials
 
-say "3/9 can we use ap-south-1 (Mumbai)?"
-run aws dynamodb list-tables --region $REGION --max-items 1 >/dev/null || fail "ap-south-1 is not usable from this account (new-experience project region?). Tell Claude."
-echo "ap-south-1 OK" | tee -a "$LOG"
+say "3/9 can we use $REGION?"
+run aws dynamodb list-tables --region $REGION --max-items 1 >/dev/null || fail "$REGION is not usable from this account (new-experience project region?). Tell Claude."
+echo "$REGION OK" | tee -a "$LOG"
 
 say "4/9 CDK bootstrap"
 if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region $REGION >/dev/null 2>&1; then
@@ -49,12 +49,12 @@ run bash "$ROOT/scripts/chaintrack/build_lambdas.sh" || fail "build_lambdas"
 cd "$ROOT/infra/chaintrack" && npm ci --no-audit --no-fund >/dev/null
 
 say "6/9 deploy Core + CaptureWeb"
-run npx cdk deploy -c stage="$STAGE" "OAE-$S-Core" "OAE-$S-CaptureWeb" --require-approval never || fail "Core/CaptureWeb"
+run npx cdk deploy -c stage="$STAGE" -c region="$REGION" "OAE-$S-Core" "OAE-$S-CaptureWeb" --require-approval never || fail "Core/CaptureWeb"
 WEB=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/web-url" --query Parameter.Value --output text)
 echo "web $WEB" | tee -a "$LOG"
 
 say "7/9 deploy Capture (extraction model: ${MODEL_ID:-offline})"
-run npx cdk deploy -c stage="$STAGE" -c webUrl="$WEB" -c webOrigins="$WEB,http://localhost:5173" \
+run npx cdk deploy -c stage="$STAGE" -c region="$REGION" -c webUrl="$WEB" -c webOrigins="$WEB,http://localhost:5173" \
   -c modelId="${MODEL_ID:-offline}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} "OAE-$S-Capture" --require-approval never || fail "Capture"
 API=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
 echo "api $API" | tee -a "$LOG"
@@ -68,7 +68,7 @@ uv run --python 3.12 --with boto3 python scripts/chaintrack/create_demo_users.py
 echo "demo users created (passwords in ~/.openaeye_demo_users_$STAGE.txt)" >> "$LOG"
 
 say "9/9 publish the PWA + smoke test"
-run bash "$ROOT/scripts/chaintrack/deploy_web.sh" "$STAGE" || fail "deploy_web"
+OAE_REGION="$REGION" run bash "$ROOT/scripts/chaintrack/deploy_web.sh" "$STAGE" || fail "deploy_web"
 run curl -sS "${API%/}/verify/B-0042" | head -c 200; echo | tee -a "$LOG"
 (cd "$ROOT/services/ledger" && run uv run --python 3.12 --with boto3 --with "cryptography>=42" python -m ledger.verify_chain --stage "$STAGE" --batch B-0046) || true
 

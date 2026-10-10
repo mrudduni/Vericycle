@@ -24,7 +24,7 @@ def main(argv=None) -> int:
     ap.add_argument("--stage", required=True)
     ap.add_argument("--batch", required=True)
     ap.add_argument("--seq", type=int, required=True)
-    ap.add_argument("--region", default="ap-south-1")
+    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-south-1")
     ap.add_argument("--restore", action="store_true")
     ap.add_argument("--yes-prod", action="store_true")
     a = ap.parse_args(argv)

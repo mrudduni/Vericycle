@@ -293,7 +293,7 @@ export class CaptureStack extends Stack {
       [`Resource::${coreName}:ExportsOutputFnGetAttLedgerDigests681569D3ArnC882635C/*`, 'Objects in the stage Object Lock digest bucket.'],
       ['Resource::arn:aws:bedrock:*::foundation-model/*', 'Model chosen at runtime from SSM; cross-region inference profiles route to several regions.'],
       [`Resource::arn:aws:bedrock:*:${this.account}:inference-profile/*`, 'Model chosen at runtime from SSM (inference profile).'],
-      [`Resource::arn:aws:transcribe:ap-south-1:${this.account}:transcription-job/oae-${stage}-*`, 'Only this stage\'s job-name prefix.'],
+      [`Resource::arn:aws:transcribe:${this.region}:${this.account}:transcription-job/oae-${stage}-*`, 'Only this stage\'s job-name prefix.'],
       ['Resource::<ledgerdigestE0127BFD.Arn>:*', 'Scheduler may invoke any version of the digest function.'],
     ];
     for (const [k, why] of iam5) nag(this, `AwsSolutions::AwsSolutions-IAM5[${k}]`, why);

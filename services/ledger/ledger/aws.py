@@ -13,7 +13,8 @@ from botocore.exceptions import ClientError
 from .writer import ConflictError, Head
 
 _ser, _deser = TypeSerializer(), TypeDeserializer()
-DEFAULT_REGION = "ap-south-1"
+import os
+DEFAULT_REGION = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "ap-south-1"
 
 
 def _to_dynamo(v: Any) -> Any:

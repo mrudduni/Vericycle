@@ -22,7 +22,7 @@ def main(argv=None) -> int:
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--model")
     g.add_argument("--offline", action="store_true")
-    ap.add_argument("--region", default="ap-south-1")
+    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-south-1")
     ap.add_argument("--profile", default=None)
     a = ap.parse_args(argv)
     if a.offline:
