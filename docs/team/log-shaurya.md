@@ -31,6 +31,12 @@
 | PyYAML | capture API | MIT |
 | typescript, ts-node, @types/node | infra | Apache-2.0 / MIT / MIT |
 
+## 2026-10-10 ~11:15 IST: PWA, WhatsApp logic, hosting, runbook
+
+- Works (offline, verified): PWA `web-capture/` (chat capture with Hindi/English read-back card, ✅/✏️, receipt card with both QR codes, seller confirm page, batch timeline with icon+text chips, transfer/split/merge/intake/process/output/correction forms, in-app camera with on-device SHA-256, offline IndexedDB queue, public receipt and verify pages, privacy page). Initial JS 82 KB gzipped. Browser e2e at 360 px (`tests/chaintrack/e2e/flow.mjs`): chat → ✅ → seller confirms on a second browser → chip shows "Seller confirmed on own phone" → offline transfer syncs exactly once → recycler intake → public receipt/verify → token single-use; no horizontal scroll; no control under 40 px. WhatsApp intake logic with tests (EUMS SNS parsing, Meta retry dedupe, unregistered-number reply, voice note → Transcribe → card back on WhatsApp, `HAAN <code>` handler confirmation with own-phone vs same-phone detection). Optional WhatsApp CDK resources. Amplify Hosting stack + `deploy_web.sh`. `run_eval.py`. Runbook in `infra/chaintrack/README.md`. 97 Python tests pass.
+- Next: deploy stage `shaurya` as soon as there is an AWS login; choose Bedrock model with `run_eval.py`; real collector sign-in once the method is chosen; anomaly checks (P2).
+- Blocked: IAM user (no AWS access yet); GitHub push access; WhatsApp number; collector sign-in method; deadline time. The deployed PWA cannot sign business users in until the sign-in method is built (local dev uses a demo-party picker against `scripts/chaintrack/local_api.py`).
+
 ## Third-party libraries and licences
 
 | Library | Used in | Licence |
@@ -39,3 +45,9 @@
 | boto3 | AWS adapters | Apache-2.0 |
 | cedarpy | Cedar policy tests | Apache-2.0 |
 | pytest | tests | MIT |
+| react, react-dom | web-capture | MIT |
+| i18next, react-i18next | web-capture | MIT |
+| qrcode-generator | web-capture QR codes | MIT |
+| @zxing/browser | QR scan fallback (lazy) | MIT |
+| vite, @vitejs/plugin-react | web-capture build | MIT |
+| Playwright (pre-installed, e2e only) | tests | Apache-2.0 |
