@@ -25,7 +25,8 @@ say "2/9 sign-in (profile $PROFILE)"
 if ! aws sts get-caller-identity --profile "$PROFILE" >/dev/null 2>&1; then
   echo "Opening the browser for aws login…" | tee -a "$LOG"
   aws configure set region "$REGION" --profile "$PROFILE"
-  aws login --profile "$PROFILE" || fail "aws login"
+  # New-experience accounts sign in through their project's region (yours: Sydney); resources still go to Mumbai.
+  aws login --profile "$PROFILE" --region "${LOGIN_REGION:-ap-southeast-2}" || fail "aws login"
 fi
 ACCOUNT=$(aws sts get-caller-identity --profile "$PROFILE" --query Account --output text) || fail "sts"
 echo "account $ACCOUNT  identity $(aws sts get-caller-identity --profile "$PROFILE" --query Arn --output text | sed 's/.*://')" | tee -a "$LOG"
