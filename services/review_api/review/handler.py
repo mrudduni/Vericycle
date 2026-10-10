@@ -58,6 +58,22 @@ def build_service() -> ReviewService:
 
 
 _SERVICE: ReviewService | None = None
+_LLM = None
+
+
+def copilot_answer(svc: ReviewService, claim_id: str, question: str) -> dict:
+    """Deterministic explanation always; a Bedrock/Strands answer on top when COPILOT_MODEL_ID is set (read-only tools)."""
+    global _LLM
+    from copilot.agent import answer, make_llm_runner  # noqa: PLC0415
+
+    model_id = os.environ.get("COPILOT_MODEL_ID")
+    if model_id and _LLM is None:
+        try:
+            _LLM = make_llm_runner(svc.get_claim, model_id, os.environ.get("COPILOT_REGION", "ap-south-1"),
+                                   os.environ.get("GUARDRAIL_ID") or None, os.environ.get("GUARDRAIL_VERSION") or None)
+        except ImportError:
+            _LLM = False
+    return answer(claim_id, question or "Why was this claim flagged?", svc.get_claim, _LLM or None)
 
 
 def _resp(status: int, body: Any) -> dict:
@@ -114,6 +130,9 @@ def route(svc: ReviewService, method: str, path: str, event: dict, principal: di
     if (r := m(r"^/claims/([\w-]+)/reviews$", path)) and method == "POST":
         guard(r.group(1))
         return 201, svc.add_review(r.group(1), body, principal)
+    if (r := m(r"^/claims/([\w-]+)/copilot$", path)) and method == "POST":
+        guard(r.group(1))
+        return 200, copilot_answer(svc, r.group(1), str(body.get("question", ""))[:500])
     if method == "POST" and path == "/claim-evidence/presign":
         raise ApiError(501, "NOT_IMPLEMENTED", "Evidence upload is wired by the evidence stack (see infra/claimguard).")
     raise ApiError(404, "NOT_FOUND", f"{method} {path}")

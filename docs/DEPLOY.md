@@ -34,11 +34,11 @@ python scripts/chaintrack/create_demo_users.py --stage prod
 bash scripts/chaintrack/deploy_web.sh prod
 
 # ClaimGuard
-bash scripts/claimguard/build_lambdas.sh
+COPILOT=1 bash scripts/claimguard/build_lambdas.sh   # COPILOT=1 adds the Strands agent layer; omit for deterministic explanations only
 cd infra/claimguard && npm ci
 npx cdk deploy -c stage=prod -c ledgerStage=prod OAE-Prod-ReviewWeb
 REV=$(aws ssm get-parameter --name /openaeye/prod/review/web-url --query Parameter.Value --output text)
-npx cdk deploy -c stage=prod -c ledgerStage=prod -c webOrigins=$REV OAE-Prod-Claims
+npx cdk deploy -c stage=prod -c ledgerStage=prod -c webOrigins=$REV -c copilotModel=amazon.nova-lite-v1:0 OAE-Prod-Claims
 cd ../.. && python scripts/claimguard/seed_claims.py --stage prod --ledger-stage prod
 bash scripts/claimguard/deploy_web.sh prod prod
 ```
@@ -61,6 +61,15 @@ the flags below. Any difference from the offline run means one side diverged fro
 | C-106 | R6 SOFT |
 | C-107 | R4 HARD |
 | C-108 | no flags, coverage 0% |
+
+Copilot: `POST /claims/{id}/copilot` always returns a deterministic, cited explanation of the rule results. With
+`-c copilotModel=...` it also asks a Strands agent on Bedrock (read-only tools, a Guardrail denying fraud verdicts about
+named parties) and keeps the answer only if every sentence cites a real rule or source id. It runs inside the review
+Lambda, not on AgentCore Runtime.
+
+Evidence: upload photos, weigh slips, invoices and power bills to `evidence/<claim_id or batch_id>/<PHOTO|WEIGH_SLIP|INVOICE|POWER_BILL>/<file>`
+in the claim-evidence bucket (or the capture bucket); the processor extracts EXIF, hashes, light class and Textract fields.
+`python scripts/claimguard/make_sample_photos.py` renders sample photos.
 
 ## 2. WhatsApp (real number)
 

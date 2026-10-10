@@ -18,7 +18,7 @@ if (stage === 'prod' && !ledgerStage) throw new Error('prod must read the live l
 
 const S = cap(stage);
 new ReviewWebStack(app, `OAE-${S}-ReviewWeb`, { env, stage });
-new ClaimsStack(app, `OAE-${S}-Claims`, { env, stage, webOrigins, ledgerStage, webUrl: ctx('webUrl') });
+new ClaimsStack(app, `OAE-${S}-Claims`, { env, stage, webOrigins, ledgerStage, webUrl: ctx('webUrl'), copilotModel: ctx('copilotModel') });
 
 Tags.of(app).add('project', 'openaeye');
 Tags.of(app).add('stage', stage);

@@ -5,6 +5,7 @@ import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwi from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwa from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as bedrock from 'aws-cdk-lib/aws-bedrock';
 import * as cw from 'aws-cdk-lib/aws-cloudwatch';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
@@ -24,6 +25,8 @@ export interface ClaimsProps extends StackProps, StageProps {
   /** ChainTrack stage whose ledger/Cognito this reads. Empty = demo fixture, dev auth. */
   ledgerStage: string;
   webUrl: string;
+  /** Bedrock model for the copilot's generated answer (e.g. amazon.nova-lite-v1:0). Empty = deterministic explanations only. */
+  copilotModel: string;
 }
 
 /** MRUDDUNI.md 3.11: claims table, claim evidence bucket, ClaimGuard + Review API Lambda, HTTP API, SSM exports. */
@@ -123,6 +126,30 @@ export class ClaimsStack extends Stack {
         conditions: { StringEquals: { 'kms:ViaService': `dynamodb.${this.region}.amazonaws.com` } },
       }));
     }
+    if (props.copilotModel) {
+      // Guardrail: no fraud verdicts about named parties; prompt-attack filter on user input (SOLUTION.md F9, section 13.6).
+      const guardrail = new bedrock.CfnGuardrail(this, 'CopilotGuardrail', {
+        name: `oae-${stage}-copilot`,
+        blockedInputMessaging: 'I can only explain what ClaimGuard found. I cannot say whether a party committed fraud.',
+        blockedOutputsMessaging: 'I can only explain what ClaimGuard found. I cannot say whether a party committed fraud.',
+        topicPolicyConfig: { topicsConfig: [{
+          name: 'fraud-verdicts', type: 'DENY',
+          definition: 'Statements or questions asking whether a named person or company committed fraud, is a scammer, a criminal or guilty.',
+          examples: ['Is this recycler a fraud?', 'Did REC-01 cheat the system?'],
+        }] },
+        contentPolicyConfig: { filtersConfig: [{ type: 'PROMPT_ATTACK', inputStrength: 'HIGH', outputStrength: 'NONE' }] },
+        kmsKeyArn: dataKey.keyArn,
+      });
+      fn.addEnvironment('COPILOT_MODEL_ID', props.copilotModel);
+      fn.addEnvironment('GUARDRAIL_ID', guardrail.attrGuardrailId);
+      fn.addEnvironment('GUARDRAIL_VERSION', 'DRAFT');
+      fn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream', 'bedrock:Converse', 'bedrock:ConverseStream'],
+        resources: [`arn:aws:bedrock:*::foundation-model/${props.copilotModel}`,
+          `arn:aws:bedrock:*:${this.account}:inference-profile/*`],
+      }));
+      fn.addToRolePolicy(new iam.PolicyStatement({ actions: ['bedrock:ApplyGuardrail'], resources: [guardrail.attrGuardrailArn] }));
+    }
     new cw.Alarm(this, 'ReviewApiErrors', {
       alarmName: `oae-${stage}-review-api-errors`, metric: fn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 3, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING,
@@ -203,7 +230,7 @@ export class ClaimsStack extends Stack {
     const secured: [string, apigw.HttpMethod][] = [
       ['/claims', apigw.HttpMethod.GET], ['/claims', apigw.HttpMethod.POST],
       ['/claims/{claim_id}', apigw.HttpMethod.GET], ['/claims/{claim_id}/check', apigw.HttpMethod.POST],
-      ['/claims/{claim_id}/runs/{run_id}', apigw.HttpMethod.GET], ['/claims/{claim_id}/reviews', apigw.HttpMethod.POST],
+      ['/claims/{claim_id}/runs/{run_id}', apigw.HttpMethod.GET], ['/claims/{claim_id}/reviews', apigw.HttpMethod.POST], ['/claims/{claim_id}/copilot', apigw.HttpMethod.POST],
       ['/claim-evidence/presign', apigw.HttpMethod.POST],
     ];
     const open: [string, apigw.HttpMethod][] = [['/impact', apigw.HttpMethod.GET], ['/sources/{source_id}', apigw.HttpMethod.GET]];
@@ -229,6 +256,10 @@ export class ClaimsStack extends Stack {
     new CfnOutput(this, 'ClaimsTable', { value: table.tableName });
 
     const iam5: [string, string][] = [
+      ...(props.copilotModel ? [
+        [`Resource::arn:aws:bedrock:*::foundation-model/${props.copilotModel}`,'Model id may be served through a cross-region inference profile (region/prefix varies).'] as [string, string],
+        [`Resource::arn:aws:bedrock:*:${this.account}:inference-profile/*`, 'Inference profiles of this account for the chosen model.'] as [string, string],
+      ] : []),
       ['Action::kms:GenerateDataKey*', 'CDK grantEncryptDecrypt on the stage claims key only.'],
       ['Action::kms:ReEncrypt*', 'CDK grantEncryptDecrypt on the stage claims key only.'],
       ['Action::s3:Abort*', 'Multipart abort on the stage claim-evidence bucket only.'],
