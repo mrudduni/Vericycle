@@ -2,6 +2,7 @@
 import { App, Tags, Validations } from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { CoreStack } from '../lib/core-stack';
+import { CaptureStack } from '../lib/capture-stack';
 import { cap } from '../lib/common';
 
 const app = new App();
@@ -16,7 +17,15 @@ if (digestRetentionDays > 1 && !app.node.tryGetContext('approvedLongRetention'))
 }
 
 const S = cap(stage);
-new CoreStack(app, `OAE-${S}-Core`, { env, stage, webOrigins, digestRetentionDays });
+const core = new CoreStack(app, `OAE-${S}-Core`, { env, stage, webOrigins, digestRetentionDays });
+const ctx = (k: string, d: string) => String(app.node.tryGetContext(k) ?? d);
+new CaptureStack(app, `OAE-${S}-Capture`, {
+  env, stage, core, webOrigins,
+  webUrl: ctx('webUrl', webOrigins[0] ?? 'http://localhost:5173'),
+  modelId: ctx('modelId', 'offline'),
+  bedrockRegion: ctx('bedrockRegion', 'ap-south-1'),
+  waNumber: ctx('waNumber', ''),
+});
 
 Tags.of(app).add('project', 'openaeye');
 Tags.of(app).add('stage', stage);

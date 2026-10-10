@@ -72,7 +72,7 @@ def _run_post(req: dict) -> dict:
 
 
 def _post(route: str, **args):
-    key = app.current_event.get_header_value("Idempotency-Key", case_sensitive=False)
+    key = (app.current_event.headers or {}).get("idempotency-key") or (app.current_event.headers or {}).get("Idempotency-Key")
     if not key or len(key) > 64:
         raise bad("MISSING_IDEMPOTENCY_KEY", "Send an Idempotency-Key header (a ULID made on the device).")
     p = _principal()
