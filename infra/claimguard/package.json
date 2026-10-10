@@ -1,0 +1,25 @@
+{
+  "name": "oae-claimguard-infra",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "bin": {
+    "claimguard": "bin/app.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth -c stage=mrudduni",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.273.0",
+    "cdk-nag": "3.0.2",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "aws-cdk": "2.1145.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3"
+  }
+}
