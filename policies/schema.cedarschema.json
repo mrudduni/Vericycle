@@ -1,0 +1,68 @@
+{
+  "OAE": {
+    "entityTypes": {
+      "BusinessUser": {
+        "shape": {"type": "Record", "attributes": {
+          "role": {"type": "String"},
+          "party_id": {"type": "String"}
+        }}
+      },
+      "HandlerToken": {
+        "shape": {"type": "Record", "attributes": {
+          "batch_id": {"type": "String"},
+          "seq": {"type": "Long"},
+          "field_names": {"type": "Set", "element": {"type": "String"}}
+        }}
+      },
+      "Copilot": {},
+      "Batch": {
+        "shape": {"type": "Record", "attributes": {
+          "material": {"type": "String"}
+        }}
+      },
+      "Event": {
+        "memberOfTypes": ["Batch"],
+        "shape": {"type": "Record", "attributes": {
+          "batch_id": {"type": "String"},
+          "seq": {"type": "Long"},
+          "type": {"type": "String"}
+        }}
+      },
+      "Claim": {
+        "shape": {"type": "Record", "attributes": {
+          "recycler_party_id": {"type": "String"},
+          "producer_party_ids": {"type": "Set", "element": {"type": "String"}}
+        }}
+      }
+    },
+    "actions": {
+      "Write": {
+        "appliesTo": {"principalTypes": ["BusinessUser", "HandlerToken", "Copilot"], "resourceTypes": ["Batch", "Event", "Claim"],
+          "context": {"type": "Record", "attributes": {}}}
+      },
+      "CreateEvent": {
+        "memberOf": [{"id": "Write"}],
+        "appliesTo": {"principalTypes": ["BusinessUser", "HandlerToken", "Copilot"], "resourceTypes": ["Batch"],
+          "context": {"type": "Record", "attributes": {
+            "event_type": {"type": "String"},
+            "confirmed_by_roles": {"type": "Set", "element": {"type": "String"}}
+          }}}
+      },
+      "ConfirmHandlerField": {
+        "memberOf": [{"id": "Write"}],
+        "appliesTo": {"principalTypes": ["BusinessUser", "HandlerToken", "Copilot"], "resourceTypes": ["Event"],
+          "context": {"type": "Record", "attributes": {
+            "field_names": {"type": "Set", "element": {"type": "String"}}
+          }}}
+      },
+      "ReadBatch": {
+        "appliesTo": {"principalTypes": ["BusinessUser", "Copilot"], "resourceTypes": ["Batch"],
+          "context": {"type": "Record", "attributes": {}}}
+      },
+      "ReadClaim": {
+        "appliesTo": {"principalTypes": ["BusinessUser", "Copilot"], "resourceTypes": ["Claim"],
+          "context": {"type": "Record", "attributes": {}}}
+      }
+    }
+  }
+}

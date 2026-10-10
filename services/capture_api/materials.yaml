@@ -1,0 +1,72 @@
+# Per-material capture config. Adding a material is a change to this file only
+# (plus its enum value in CONTRACT.md §3, which needs agreement).
+# Field types: int, number, enum, string, map_number.
+
+materials:
+  BATTERY_LEAD_ACID:
+    batch_prefix: B
+    claimable: true
+    label: {en: "Lead-acid battery", hi: "लेड-एसिड बैटरी"}
+    unit_label: {en: "batteries", hi: "बैटरी"}
+    handover:
+      required: [count, weight_kg, source_category]
+      optional: []
+      confirm_fields: [count, source_category, weight_kg]   # weight_kg only if STATED
+    extraction_hints: >-
+      E-rickshaw, inverter, car or bike batteries. A dead e-rickshaw battery weighs about 30 kg
+      (DEMO VALUE). Words: battery, baitri, bettery, inverter battery, e-rickshaw ki battery.
+  EWASTE_PHONE:
+    batch_prefix: P
+    claimable: true
+    label: {en: "Mobile phones", hi: "मोबाइल फ़ोन"}
+    unit_label: {en: "phones", hi: "फ़ोन"}
+    handover:
+      required: [count, weight_kg, source_category]
+      optional: [device_category]
+      confirm_fields: [count, source_category, weight_kg]
+    extraction_hints: >-
+      Old smartphones and feature phones, often from a retail exchange counter.
+      A phone weighs about 0.15 to 0.2 kg. Words: mobile, phone, handset, purana phone.
+  AC_REFRIGERANT:
+    batch_prefix: A
+    claimable: false   # no claim path, ever (CONTRACT §3 ClaimProduct)
+    label: {en: "Air conditioner (refrigerant)", hi: "एसी (रेफ्रिजरेंट गैस)"}
+    unit_label: {en: "AC units", hi: "एसी"}
+    handover:
+      required: [count, source_category]
+      optional: [gas_type, charge_kg]
+      confirm_fields: [count, source_category]
+    receipt_note:
+      en: "Refrigerant earns no recycling certificate. This record counts towards the uncounted-harm figure."
+      hi: "रेफ्रिजरेंट गैस पर कोई रीसाइक्लिंग प्रमाणपत्र नहीं मिलता। यह रिकॉर्ड उस नुकसान में गिना जाता है जिसे अभी कोई नहीं गिनता।"
+    extraction_hints: >-
+      Old split or window AC. Gas type R-22, R-32 or R-410A if said; nameplate charge in kg if said.
+
+fields:
+  count:            {type: int, min: 1, max: 100000, unit: null, label: {en: "Count", hi: "संख्या"}}
+  weight_kg:        {type: number, min: 0.001, max: 1000000, unit: kg, label: {en: "Weight", hi: "वज़न"}}
+  source_category:  {type: enum, values: [DRIVER, HOUSEHOLD, TECHNICIAN, RETAIL_EXCHANGE, INSTITUTION, OTHER, UNKNOWN],
+                     unit: null, label: {en: "Bought from", hi: "किससे लिया"}}
+  gas_type:         {type: enum, values: [R-22, R-32, R-410A, UNKNOWN], unit: null, label: {en: "Gas", hi: "गैस"}}
+  charge_kg:        {type: number, min: 0.01, max: 100, unit: kg, label: {en: "Gas charge", hi: "गैस की मात्रा"}}
+  device_category:  {type: string, max_len: 40, unit: null, label: {en: "Device type", hi: "डिवाइस"}}
+  facility_id:      {type: string, max_len: 20, unit: null, label: {en: "Facility", hi: "प्लांट"}}
+  input_kg:         {type: number, min: 0.001, max: 100000000, unit: kg, label: {en: "Input", hi: "इनपुट"}}
+  run_id:           {type: string, max_len: 40, unit: null, label: {en: "Run", hi: "रन"}}
+  metal:            {type: enum, values: [LEAD, COPPER, ALUMINIUM, IRON, GOLD], unit: null, label: {en: "Metal", hi: "धातु"}}
+  output_kg:        {type: number, min: 0.001, max: 100000000, unit: kg, label: {en: "Output", hi: "आउटपुट"}}
+  child_weights_kg: {type: map_number, unit: kg, label: {en: "Child weights", hi: "हिस्सों का वज़न"}}
+  corrects_seq:     {type: int, min: 1, max: 1000000, unit: null, label: {en: "Corrects", hi: "सुधार"}}
+  field:            {type: string, max_len: 40, unit: null, label: {en: "Field", hi: "फ़ील्ड"}}
+  new_value:        {type: any, unit: null, label: {en: "New value", hi: "नया मान"}}
+  reason:           {type: string, max_len: 200, unit: null, label: {en: "Reason", hi: "कारण"}}
+
+# CONTRACT §5 "Fields expected per event type" (HANDOVER comes from the material block above).
+event_types:
+  TRANSFER:   {required: [weight_kg], optional: [count], weighed: [weight_kg]}
+  SPLIT:      {required: [child_weights_kg], optional: [weight_kg]}   # child's first event also carries its own weight_kg
+  MERGE:      {required: [weight_kg], optional: []}
+  INTAKE:     {required: [weight_kg, facility_id], optional: [count], weighed: [weight_kg]}
+  PROCESS:    {required: [input_kg, run_id], optional: []}
+  OUTPUT:     {required: [metal, output_kg], optional: []}
+  CORRECTION: {required: [corrects_seq, field, new_value, reason], optional: []}

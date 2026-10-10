@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["material", "count", "weight_kg", "weight_basis", "source_category", "gas_type", "charge_kg", "language", "uncertain_fields"],
+  "properties": {
+    "material": {"type": "string", "enum": ["BATTERY_LEAD_ACID", "EWASTE_PHONE", "AC_REFRIGERANT", "UNKNOWN"]},
+    "count": {"type": ["integer", "null"], "minimum": 1},
+    "weight_kg": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "weight_basis": {"type": "string", "enum": ["STATED", "WEIGHED"]},
+    "source_category": {"type": "string", "enum": ["DRIVER", "HOUSEHOLD", "TECHNICIAN", "RETAIL_EXCHANGE", "INSTITUTION", "OTHER", "UNKNOWN"]},
+    "gas_type": {"type": ["string", "null"], "enum": ["R-22", "R-32", "R-410A", "UNKNOWN", null]},
+    "charge_kg": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "language": {"type": "string", "enum": ["hi", "en", "mixed"]},
+    "uncertain_fields": {"type": "array", "items": {"type": "string"}}
+  }
+}

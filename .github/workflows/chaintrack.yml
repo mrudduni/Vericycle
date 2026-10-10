@@ -1,0 +1,75 @@
+# ChainTrack (Shaurya) checks: ledger, capture API, extraction, WhatsApp and Cedar policy tests;
+# CDK synth with cdk-nag; PWA type-check, build and 200 KB initial-JS budget.
+# Runs only when ChainTrack folders change, so it never touches ClaimGuard's workflows.
+name: chaintrack
+
+on:
+  push:
+    paths:
+      - "services/ledger/**"
+      - "services/capture_api/**"
+      - "services/extract/**"
+      - "services/ingest/**"
+      - "policies/**"
+      - "infra/chaintrack/**"
+      - "web-capture/**"
+      - "scripts/chaintrack/**"
+      - "tests/chaintrack/**"
+      - ".github/workflows/chaintrack.yml"
+  pull_request:
+    paths:
+      - "services/ledger/**"
+      - "services/capture_api/**"
+      - "services/extract/**"
+      - "services/ingest/**"
+      - "policies/**"
+      - "infra/chaintrack/**"
+      - "web-capture/**"
+      - "scripts/chaintrack/**"
+      - "tests/chaintrack/**"
+      - ".github/workflows/chaintrack.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Tests (incl. Cedar allow/deny cases)
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python -e "services/ledger[dev]" pyyaml "aws-lambda-powertools>=3" aws-xray-sdk segno
+          .venv/bin/python -m pytest -q tests/chaintrack
+      - name: Extraction eval (offline reader)
+        run: .venv/bin/python scripts/chaintrack/run_eval.py --offline
+
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build Lambda assets
+        run: bash scripts/chaintrack/build_lambdas.sh
+      - name: CDK synth + cdk-nag (shaurya and prod)
+        working-directory: infra/chaintrack
+        env: { CDK_DEFAULT_ACCOUNT: "111111111111" }
+        run: |
+          npm ci
+          npx cdk synth -c stage=shaurya -q
+          npx cdk synth -c stage=prod -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web-capture } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm run build
+      - run: node scripts/size.mjs

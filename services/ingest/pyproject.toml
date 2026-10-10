@@ -1,0 +1,6 @@
+[project]
+name = "oae-ingest"
+version = "0.1.0"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["segno>=1.6"]
