@@ -1,6 +1,6 @@
 """Lambda entry for the Review API (API Gateway HTTP API, payload v2). CONTRACT.md section 7.
 
-Env: AUTH_MODE=dev|jwt, CLAIMS_TABLE, LEDGER_TABLE (omit LEDGER_TABLE to read the demo fixture),
+Env: AUTH_MODE=dev|jwt, POLICY_STORE_ID (Verified Permissions; omit for the local mirror), CLAIMS_TABLE, LEDGER_TABLE (omit LEDGER_TABLE to read the demo fixture),
 CLAIM_EVIDENCE_BUCKET, ALLOW_ORIGIN.
 AUTH_MODE=dev trusts X-Dev-Party / X-Dev-Role headers: synthetic data only, never in prod.
 """
@@ -18,16 +18,6 @@ from claimguard.sources import SourcesRegistry
 from .service import ApiError, ReviewService
 
 ROLES = {"COLLECTOR", "AGGREGATOR", "RECYCLER", "AUDITOR", "PRODUCER"}
-
-
-def can_read_claim(principal: dict, claim) -> bool:
-    """One function so tomorrow it can call Verified Permissions IsAuthorized without touching handlers."""
-    role = principal.get("role")
-    if role in ("AUDITOR", "PRODUCER"):
-        return True
-    if role == "RECYCLER":
-        return principal.get("party_id") == claim.recycler_party_id
-    return False
 
 
 def principal_from_event(event: dict, auth_mode: str) -> dict | None:
@@ -54,7 +44,11 @@ def build_service() -> ReviewService:
         ledger = DynamoLedgerReader(ledger_table)
     else:
         ledger = FixtureLedgerReader(os.environ.get("LEDGER_FIXTURE") or None)
-    return ReviewService(repo, ledger, sources)
+    from .authz import AvpAuthorizer, DevAuthorizer  # noqa: PLC0415
+
+    store = os.environ.get("POLICY_STORE_ID")
+    authz = AvpAuthorizer(store) if store else DevAuthorizer()
+    return ReviewService(repo, ledger, sources, authz)
 
 
 _SERVICE: ReviewService | None = None
@@ -85,7 +79,7 @@ def _resp(status: int, body: Any) -> dict:
     }
 
 
-def route(svc: ReviewService, method: str, path: str, event: dict, principal: dict | None) -> tuple[int, Any]:
+def route(svc: ReviewService, method: str, path: str, event: dict, principal: dict | None, sfn_client=None) -> tuple[int, Any]:
     body = json.loads(event["body"]) if event.get("body") else {}
     m = re.match
 
@@ -101,13 +95,13 @@ def route(svc: ReviewService, method: str, path: str, event: dict, principal: di
         claim = svc.repo.get_claim(claim_id)
         if claim is None:
             raise ApiError(404, "CLAIM_NOT_FOUND", f"No claim {claim_id}.")
-        if not can_read_claim(principal, claim):
+        if not svc.authz.can_read_claim(principal, claim):
             raise ApiError(403, "FORBIDDEN", "You cannot read this claim.")
 
     if method == "GET" and path == "/claims":
         rows = svc.list_claims()
         rows["claims"] = [c for c in rows["claims"]
-                          if can_read_claim(principal, svc.repo.get_claim(c["claim_id"]))]
+                          if svc.authz.can_read_claim(principal, svc.repo.get_claim(c["claim_id"]))]
         return 200, rows
     if method == "POST" and path == "/claims":
         if principal["role"] != "RECYCLER":
@@ -120,6 +114,9 @@ def route(svc: ReviewService, method: str, path: str, event: dict, principal: di
     if (r := m(r"^/claims/([\w-]+)/check$", path)) and method == "POST":
         if principal["role"] != "AUDITOR":
             raise ApiError(403, "FORBIDDEN", "Only an auditor can run ClaimGuard.")
+        arn = os.environ.get("STATE_MACHINE_ARN")
+        if arn:  # Step Functions workflow: returns at once, the run appears on GET /claims/{id}
+            return 202, svc.start_check(r.group(1), arn, sfn_client)
         return 200, svc.check_claim(r.group(1))
     if (r := m(r"^/claims/([\w-]+)/runs/([\w:+.-]+)$", path)) and method == "GET":
         guard(r.group(1))
@@ -134,11 +131,11 @@ def route(svc: ReviewService, method: str, path: str, event: dict, principal: di
         guard(r.group(1))
         return 200, copilot_answer(svc, r.group(1), str(body.get("question", ""))[:500])
     if method == "POST" and path == "/claim-evidence/presign":
-        raise ApiError(501, "NOT_IMPLEMENTED", "Evidence upload is wired by the evidence stack (see infra/claimguard).")
+        return 200, svc.presign_evidence(principal, body, os.environ.get("CLAIM_EVIDENCE_BUCKET", ""))
     raise ApiError(404, "NOT_FOUND", f"{method} {path}")
 
 
-def handler(event: dict, context: Any = None, service: ReviewService | None = None) -> dict:
+def handler(event: dict, context: Any = None, service: ReviewService | None = None, sfn_client=None) -> dict:
     global _SERVICE
     svc = service or _SERVICE or build_service()
     if service is None:
@@ -152,7 +149,7 @@ def handler(event: dict, context: Any = None, service: ReviewService | None = No
             "access-control-allow-methods": "GET,POST,OPTIONS"}, "body": ""}
     try:
         principal = principal_from_event(event, os.environ.get("AUTH_MODE", "jwt"))
-        status, body = route(svc, method, path, event, principal)
+        status, body = route(svc, method, path, event, principal, sfn_client)
         return _resp(status, body)
     except ApiError as e:
         return _resp(e.status, {"error": {"code": e.code, "message": e.message}})

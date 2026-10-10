@@ -15,6 +15,7 @@ cp -r "$ROOT/services/claimguard/claimguard" "$OUT/app/"
 cp -r "$ROOT/services/review_api/review" "$OUT/app/"
 cp -r "$ROOT/services/evidence/evidence" "$OUT/app/"
 cp -r "$ROOT/services/copilot/copilot" "$OUT/app/"
+mkdir -p "$OUT/app/policies" && cp "$ROOT"/policies/*.cedar "$ROOT/policies/schema.cedarschema.json" "$OUT/app/policies/"
 cp "$ROOT/data/sources.yaml" "$OUT/app/data/"
 cp "$ROOT/data/fixtures/ledger_events.json" "$OUT/app/data/fixtures/"
 find "$OUT" -name '__pycache__' -type d -prune -exec rm -rf {} +

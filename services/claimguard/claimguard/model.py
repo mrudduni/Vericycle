@@ -236,6 +236,8 @@ class Claim:
     documented_losses_t: float | None = None
     electricity_kwh: float | None = None
     diesel_generator_logged: bool = False
+    producer_party_ids: tuple[str, ...] = ()
+    """Producers (brands) whose products this claim covers; Cedar's producer-read-citing-claim policy reads it."""
     submitted_at: datetime | None = None
     """When this claim was submitted. R4's double-claim check flags whichever
     claim cites a batch *later* than the earliest claim to cite it, so the

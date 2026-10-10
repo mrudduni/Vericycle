@@ -270,6 +270,8 @@ LEDGER_BATCHES = {
 # ---------------------------------------------------------------------------
 
 def claim(**kw):
+    # Demo producer: PRD-01 is the battery brand, so it may read battery claims (Cedar producer-read-citing-claim).
+    kw.setdefault("producer_party_ids", ["PRD-01"] if kw.get("product") == "BATTERY_LEAD_ACID" else [])
     return kw
 
 

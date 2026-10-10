@@ -29,7 +29,19 @@ async function call<T>(path: string, opts: { method?: string; body?: unknown; au
 
 export const listClaims = () => call<{ claims: ClaimRow[] }>('/claims').then((d) => d.claims);
 export const getClaim = (id: string) => call<ClaimDetail>(`/claims/${encodeURIComponent(id)}`);
-export const runCheck = (id: string) => call<Run>(`/claims/${encodeURIComponent(id)}/check`, { method: 'POST', body: {} });
+type CheckStart = Run | { status: 'RUNNING'; execution_id: string };
+
+/** Runs ClaimGuard. Solo stages answer with the run; the Step Functions workflow answers 202 and the run appears on the claim. */
+export async function runCheck(id: string, previousRanAt?: string | null): Promise<void> {
+  const r = await call<CheckStart>(`/claims/${encodeURIComponent(id)}/check`, { method: 'POST', body: {} });
+  if (!('status' in r) || r.status !== 'RUNNING') return;
+  for (let i = 0; i < 40; i++) {
+    await new Promise((res) => setTimeout(res, 1000));
+    const d = await getClaim(id);
+    if (d.run && d.run.ran_at !== previousRanAt) return;
+  }
+  throw new ApiError('TIMEOUT', 'ClaimGuard is still running. Reload in a moment to see the result.', 0);
+}
 export const postReview = (id: string, action: ReviewAction, note: string) =>
   call<unknown>(`/claims/${encodeURIComponent(id)}/reviews`, { method: 'POST', body: { action, note: note || undefined } });
 export const getImpact = () => call<{ metrics: Metric[] }>('/impact', { auth: false }).then((d) => d.metrics);

@@ -16,5 +16,6 @@
   "documented_losses_t": null,
   "electricity_kwh": null,
   "diesel_generator_logged": false,
-  "submitted_at": "2026-10-07T09:35:00+05:30"
+  "submitted_at": "2026-10-07T09:35:00+05:30",
+  "producer_party_ids": []
 }

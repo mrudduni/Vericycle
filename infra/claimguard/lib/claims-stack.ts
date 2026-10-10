@@ -8,6 +8,8 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as bedrock from 'aws-cdk-lib/aws-bedrock';
 import * as cw from 'aws-cdk-lib/aws-cloudwatch';
 import * as events from 'aws-cdk-lib/aws-events';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -92,14 +94,7 @@ export class ClaimsStack extends Stack {
     });
     const origin = props.webOrigins[0] ?? '*';
     const ledgerTable = live ? ssm.StringParameter.valueForStringParameter(this, `/openaeye/${ledgerStage}/ledger/table-name`) : '';
-    const fn = new lambda.Function(this, 'ReviewApi', {
-      functionName: `oae-${stage}-review-api`,
-      runtime: lambda.Runtime.PYTHON_3_12, architecture: lambda.Architecture.ARM_64,
-      handler: 'review.handler.handler',
-      code: lambda.Code.fromAsset(path.join(ROOT, '.build/claimguard/app')),
-      layers: [powertools, deps],
-      timeout: Duration.seconds(29), memorySize: 512, tracing: lambda.Tracing.ACTIVE, logGroup,
-      environment: {
+    const baseEnv: Record<string, string> = {
         STAGE: stage,
         AUTH_MODE: live ? 'jwt' : 'dev',
         CLAIMS_TABLE: table.tableName,
@@ -107,13 +102,27 @@ export class ClaimsStack extends Stack {
         SOURCES_PATH: '/var/task/data/sources.yaml',
         CLAIM_EVIDENCE_BUCKET: evidenceBucket.bucketName,
         ALLOW_ORIGIN: origin,
+        ...(live ? { POLICY_STORE_ID: ssm.StringParameter.valueForStringParameter(this, `/openaeye/${ledgerStage}/authz/policy-store-id`) } : {}),
         POWERTOOLS_SERVICE_NAME: 'claimguard',
-      },
+      };
+    const fn = new lambda.Function(this, 'ReviewApi', {
+      functionName: `oae-${stage}-review-api`,
+      runtime: lambda.Runtime.PYTHON_3_12, architecture: lambda.Architecture.ARM_64,
+      handler: 'review.handler.handler',
+      code: lambda.Code.fromAsset(path.join(ROOT, '.build/claimguard/app')),
+      layers: [powertools, deps],
+      timeout: Duration.seconds(29), memorySize: 512, tracing: lambda.Tracing.ACTIVE, logGroup,
+      environment: baseEnv,
     });
     nag(fn, 'AwsSolutions::AwsSolutions-L1', 'CONTRACT §2 fixes Python 3.12 for both apps.');
     table.grantReadWriteData(fn);
     dataKey.grantEncryptDecrypt(fn);
     evidenceBucket.grantReadWrite(fn);
+    if (live) {
+      // Claim reads are decided by ChainTrack's Cedar policies in Amazon Verified Permissions (CONTRACT §2: authz/policy-store-id).
+      fn.addToRolePolicy(new iam.PolicyStatement({ actions: ['verifiedpermissions:IsAuthorized'],
+        resources: [`arn:aws:verifiedpermissions::${this.account}:policy-store/${baseEnv.POLICY_STORE_ID}`] }));
+    }
     if (live) {
       // Read-only on the ChainTrack ledger (CONTRACT §6: Mrudduni reads only). Its key policy lets the account's IAM principals use it.
       const ledgerArn = ssm.StringParameter.valueForStringParameter(this, `/openaeye/${ledgerStage}/ledger/table-arn`);
@@ -155,6 +164,62 @@ export class ClaimsStack extends Stack {
       threshold: 3, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING,
       comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
     });
+
+    // --- ClaimGuard workflow: Parallel[physical | custody | photos | documents] -> Finalize -------------------------------
+    // Same Lambda code as the review API, different entry points (review/workflow.py). The execution graph is a demo asset.
+    const wfFn = (name: string, handler: string, memory = 512) => {
+      const lg = new logs.LogGroup(this, `${name}Logs`, { logGroupName: `/aws/lambda/oae-${stage}-${name}`,
+        retention: logs.RetentionDays.ONE_MONTH, removalPolicy: RemovalPolicy.DESTROY });
+      const f = new lambda.Function(this, name, {
+        functionName: `oae-${stage}-${name}`, runtime: lambda.Runtime.PYTHON_3_12, architecture: lambda.Architecture.ARM_64,
+        handler, code: lambda.Code.fromAsset(path.join(ROOT, '.build/claimguard/app')), layers: [powertools, deps],
+        timeout: Duration.seconds(60), memorySize: memory, tracing: lambda.Tracing.ACTIVE, logGroup: lg,
+        environment: { ...baseEnv },
+      });
+      nag(f, 'AwsSolutions::AwsSolutions-L1', 'CONTRACT §2 fixes Python 3.12 for both apps.');
+      table.grantReadWriteData(f);
+      dataKey.grantEncryptDecrypt(f);
+      f.addToRolePolicy(new iam.PolicyStatement({ actions: ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'], resources: ['*'] }));
+      if (live) {
+        f.addToRolePolicy(new iam.PolicyStatement({ actions: ['dynamodb:GetItem', 'dynamodb:Query', 'dynamodb:Scan'],
+          resources: [ssm.StringParameter.valueForStringParameter(this, `/openaeye/${ledgerStage}/ledger/table-arn`)] }));
+        f.addToRolePolicy(new iam.PolicyStatement({ actions: ['kms:Decrypt', 'kms:DescribeKey'], resources: ['*'],
+          conditions: { StringEquals: { 'kms:ViaService': `dynamodb.${this.region}.amazonaws.com` } } }));
+      }
+      return f;
+    };
+    const rulesFn = wfFn('claimguard-rules', 'review.workflow.rules_handler');
+    const finalizeFn = wfFn('claimguard-finalize', 'review.workflow.finalize_handler');
+    const retry = { errors: ['Lambda.ServiceException', 'Lambda.TooManyRequestsException', 'States.TaskFailed'], interval: Duration.seconds(2), maxAttempts: 2, backoffRate: 2 };
+    const branches = ['physical', 'custody', 'photos', 'documents'].map((family) => {
+      const t = new tasks.LambdaInvoke(this, `Rules-${family}`, {
+        lambdaFunction: rulesFn, stateName: `Rules: ${family}`,
+        payload: sfn.TaskInput.fromObject({ claim_id: sfn.JsonPath.stringAt('$.claim_id'), family }),
+        payloadResponseOnly: true,
+      });
+      t.addRetry(retry);
+      return t;
+    });
+    const par = new sfn.Parallel(this, 'RuleFamilies', { stateName: 'Run rule families in parallel', resultPath: '$.results' }).branch(...branches);
+    const fin = new tasks.LambdaInvoke(this, 'Finalize', {
+      lambdaFunction: finalizeFn, stateName: 'Scores and store run',
+      payload: sfn.TaskInput.fromObject({ claim_id: sfn.JsonPath.stringAt('$.claim_id'), results: sfn.JsonPath.objectAt('$.results') }),
+      payloadResponseOnly: true,
+    });
+    fin.addRetry(retry);
+    const smLogs = new logs.LogGroup(this, 'WorkflowLogs', { logGroupName: `/aws/vendedlogs/states/oae-${stage}-claimguard`,
+      retention: logs.RetentionDays.ONE_MONTH, removalPolicy: RemovalPolicy.DESTROY });
+    const machine = new sfn.StateMachine(this, 'ClaimGuardWorkflow', {
+      stateMachineName: `oae-${stage}-claimguard`, definitionBody: sfn.DefinitionBody.fromChainable(par.next(fin)),
+      timeout: Duration.minutes(5), tracingEnabled: true,
+      logs: { destination: smLogs, level: sfn.LogLevel.ALL },
+    });
+    machine.grantStartExecution(fn);
+    fn.addEnvironment('STATE_MACHINE_ARN', machine.stateMachineArn);
+    new CfnOutput(this, 'ClaimGuardWorkflowArn', { value: machine.stateMachineArn });
+    new cw.Alarm(this, 'WorkflowFailed', { alarmName: `oae-${stage}-claimguard-failed`, metric: machine.metricFailed({ period: Duration.minutes(5) }),
+      threshold: 1, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD });
 
     // --- Evidence processor: photo/slip/invoice uploaded -> EXIF, hashes, light class, Textract -> EV# item ---------
     const evLogs = new logs.LogGroup(this, 'EvidenceLogs', {
@@ -271,6 +336,10 @@ export class ClaimsStack extends Stack {
       [`Resource::<${this.getLogicalId(table.node.defaultChild as ddb.CfnTable)}.Arn>/index/*`, 'Indexes (GSI1, GSI3) of the stage claims table.'],
       [`Resource::<${this.getLogicalId(evidenceBucket.node.defaultChild as s3.CfnBucket)}.Arn>/*`, 'Objects of the stage claim-evidence bucket.'],
     ];
+    for (const f of [rulesFn, finalizeFn]) {
+      iam5.push([`Resource::<${this.getLogicalId(f.node.defaultChild as lambda.CfnFunction)}.Arn>:*`,
+        'Step Functions invokes this function by ARN; the :* covers its published versions and aliases.']);
+    }
     if (live) {
       const capParam = `SsmParameterValue${`/openaeye/${ledgerStage}/capture/evidence-bucket`.replace(/[^A-Za-z0-9]/g, '')}C96584B6F00A464EAD1953AFF4B05118Parameter`;
       iam5.push([`Resource::arn:aws:s3:::<${capParam}>/evidence/*`, 'Read-only on weigh slips and photos under evidence/ of the ChainTrack capture bucket for this stage.']);

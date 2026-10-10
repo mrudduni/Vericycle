@@ -53,6 +53,7 @@ def claim_from_dict(raw: dict) -> Claim:
         documented_losses_t=raw.get("documented_losses_t"),
         electricity_kwh=raw.get("electricity_kwh"),
         diesel_generator_logged=raw.get("diesel_generator_logged", False),
+        producer_party_ids=tuple(raw.get("producer_party_ids", [])),
         submitted_at=datetime.fromisoformat(raw["submitted_at"]) if raw.get("submitted_at") else None,
     )
 
@@ -74,6 +75,7 @@ def claim_to_dict(c: Claim) -> dict:
         "documented_losses_t": c.documented_losses_t,
         "electricity_kwh": c.electricity_kwh,
         "diesel_generator_logged": c.diesel_generator_logged,
+        "producer_party_ids": list(c.producer_party_ids),
         "submitted_at": c.submitted_at.isoformat() if c.submitted_at else None,
     }
 

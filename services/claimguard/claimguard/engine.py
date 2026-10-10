@@ -25,18 +25,27 @@ from .rules import (
 )
 
 
-def run_claim(claim: Claim, ctx: RuleContext) -> list[RuleResult]:
-    """Runs every rule against one claim. Order does not affect results."""
+FAMILIES: dict[str, tuple] = {
+    "physical": (r1_capacity, r2_mass_balance, r3_energy),
+    "custody": (r4_custody, r8_weight_drift),
+    "photos": (r5_photo_light, r6_duplicates),
+    "documents": (r7_documents,),
+}
+
+
+def run_family(claim: Claim, ctx: RuleContext, family: str) -> list[RuleResult]:
+    """One rule family. Step Functions runs the families in parallel; the union equals run_claim."""
     results: list[RuleResult] = []
-    results.append(r1_capacity.evaluate(claim, ctx))
-    results.extend(r2_mass_balance.evaluate(claim, ctx))
-    results.append(r3_energy.evaluate(claim, ctx))
-    results.append(r4_custody.evaluate(claim, ctx))
-    results.extend(r5_photo_light.evaluate(claim, ctx))
-    results.append(r6_duplicates.evaluate(claim, ctx))
-    results.append(r7_documents.evaluate(claim, ctx))
-    results.append(r8_weight_drift.evaluate(claim, ctx))
+    for module in FAMILIES[family]:
+        r = module.evaluate(claim, ctx)
+        results.extend(r if isinstance(r, list) else [r])
     return results
+
+
+def run_claim(claim: Claim, ctx: RuleContext) -> list[RuleResult]:
+    """Runs every rule against one claim, in a fixed order (R1..R8)."""
+    results = [r for fam in FAMILIES for r in run_family(claim, ctx, fam)]
+    return sorted(results, key=lambda r: (r.rule_id[:2], r.rule_id))
 
 
 @dataclass(frozen=True)

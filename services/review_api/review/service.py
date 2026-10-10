@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from claimguard import io as cg_io
-from claimguard.engine import build_claims_citing_batch, run_claim
+from claimguard.engine import FAMILIES, build_claims_citing_batch, run_family
 from claimguard.context import RuleContext
 from claimguard.engine import coverage_inputs, cited_handover_events
 from claimguard.model import (
@@ -19,6 +20,7 @@ from claimguard.model import (
     RefrigerantClaimError,
     ReviewAction,
     RuleOutcome,
+    RuleResult,
     Severity,
 )
 from claimguard.scores import compute_scores
@@ -51,8 +53,11 @@ def handover_asked_fields(event) -> tuple[str, ...]:
 
 
 class ReviewService:
-    def __init__(self, repo, ledger, sources: SourcesRegistry):
+    def __init__(self, repo, ledger, sources: SourcesRegistry, authz=None):
+        from .authz import DevAuthorizer  # noqa: PLC0415
+
         self.repo, self.ledger, self.sources = repo, ledger, sources
+        self.authz = authz or DevAuthorizer()
 
     # ---- claims ----------------------------------------------------------
     def list_claims(self) -> dict:
@@ -98,19 +103,34 @@ class ReviewService:
             raise ApiError(404, "CLAIM_NOT_FOUND", f"No claim {claim_id}.")
         return c
 
-    def check_claim(self, claim_id: str) -> dict:
-        claim = self._claim_or_404(claim_id)
+    def _ctx(self, claim: Claim) -> RuleContext:
         claims = self.repo.list_claims()
-        ctx_evidence = self.repo.all_evidence()
-        ctx = RuleContext(
+        return RuleContext(
             facility=self.repo.get_facility(claim.recycler_party_id),
             sources=self.sources,
-            evidence=ctx_evidence,
+            evidence=self.repo.all_evidence(),
             claims_citing_batch=build_claims_citing_batch(claims),
             claim_submitted_at={c.claim_id: c.submitted_at for c in claims},
             ledger_reader=self.ledger,
         )
-        results = run_claim(claim, ctx)
+
+    def run_rule_family(self, claim_id: str, family: str) -> list[dict]:
+        """One Step Functions branch. Returns JSON-able rule results."""
+        if family not in FAMILIES:
+            raise ApiError(422, "INVALID_FAMILY", f"family must be one of {list(FAMILIES)}.")
+        claim = self._claim_or_404(claim_id)
+        return [r.to_dict() for r in run_family(claim, self._ctx(claim), family)]
+
+    def finalize_run(self, claim_id: str, result_lists: list[list[dict]]) -> dict:
+        """Joins the branches, computes the three scores and stores the run."""
+        claim = self._claim_or_404(claim_id)
+        ctx = self._ctx(claim)
+        flat = sorted((r for lst in result_lists for r in lst), key=lambda r: (r["rule_id"][:2], r["rule_id"]))
+        results = [RuleResult(
+            claim_id=r["claim_id"], rule_id=r["rule_id"], rule_version=r["rule_version"], outcome=RuleOutcome(r["outcome"]),
+            severity=Severity(r["severity"]), observed=r["observed"], limit=r["limit"], formula_rendered=r["formula_rendered"],
+            evidence_ids=tuple(r["evidence_ids"]), source_ids=tuple(r["source_ids"]), demo_value=r["demo_value"],
+            next_action=r["next_action"]) for r in flat]
         covered_kg, claimed_kg = coverage_inputs(claim, ctx)
         events = cited_handover_events(claim, ctx)
         asked = {(e.batch_id, e.seq): handover_asked_fields(e) for e in events}
@@ -131,6 +151,22 @@ class ReviewService:
         self.repo.put_run(claim_id, run)
         return run
 
+    def check_claim(self, claim_id: str) -> dict:
+        """Synchronous run (solo stages, tests, seeding). Same families, same join as the Step Functions workflow."""
+        self._claim_or_404(claim_id)
+        return self.finalize_run(claim_id, [self.run_rule_family(claim_id, f) for f in FAMILIES])
+
+    def start_check(self, claim_id: str, state_machine_arn: str, sfn_client=None) -> dict:
+        """Starts the ClaimGuard workflow and returns immediately; the finished run appears on GET /claims/{id}."""
+        self._claim_or_404(claim_id)
+        if sfn_client is None:
+            import boto3  # noqa: PLC0415
+
+            sfn_client = boto3.client("stepfunctions")
+        name = f"{claim_id}-{datetime.now(IST).strftime('%Y%m%dT%H%M%S')}"
+        r = sfn_client.start_execution(stateMachineArn=state_machine_arn, name=name, input=json.dumps({"claim_id": claim_id}))
+        return {"status": "RUNNING", "execution_id": name, "execution_arn": r["executionArn"]}
+
     def get_claim(self, claim_id: str) -> dict:
         claim = self._claim_or_404(claim_id)
         run = self.repo.latest_run(claim_id)
@@ -144,6 +180,39 @@ class ReviewService:
             "reviews": self.repo.reviews(claim_id),
             "sources": {sid: self._source_dict(sid) for sid in source_ids},
         }
+
+    # ---- evidence upload -------------------------------------------------
+    EVIDENCE_KINDS = ("PHOTO", "WEIGH_SLIP", "INVOICE", "POWER_BILL")
+    EVIDENCE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"}
+    MAX_EVIDENCE_BYTES = 10 * 1024 * 1024
+
+    def presign_evidence(self, principal: dict, body: dict, bucket: str, s3_client=None) -> dict:
+        """Pre-signed POST into the claim-evidence bucket (SOLUTION.md section 8: size and type limits).
+
+        Only the recycler that owns the claim may upload. The key follows the evidence processor's convention
+        evidence/<claim_id>/<KIND>/<random>.<ext>; the processor's S3 event does the rest.
+        """
+        import secrets  # noqa: PLC0415
+
+        claim = self._claim_or_404(str(body.get("claim_id", "")))
+        if principal.get("role") != "RECYCLER" or principal.get("party_id") != claim.recycler_party_id:
+            raise ApiError(403, "FORBIDDEN", "Only the recycler that owns this claim can upload evidence for it.")
+        kind, ctype = body.get("kind"), body.get("content_type")
+        if kind not in self.EVIDENCE_KINDS:
+            raise ApiError(422, "INVALID_KIND", f"kind must be one of {list(self.EVIDENCE_KINDS)}.")
+        if ctype not in self.EVIDENCE_TYPES:
+            raise ApiError(422, "INVALID_CONTENT_TYPE", f"content_type must be one of {sorted(self.EVIDENCE_TYPES)}.")
+        if not bucket:
+            raise ApiError(503, "NOT_CONFIGURED", "No evidence bucket is configured for this stage.")
+        key = f"evidence/{claim.claim_id}/{kind}/{secrets.token_hex(8)}.{self.EVIDENCE_TYPES[ctype]}"
+        if s3_client is None:
+            import boto3  # noqa: PLC0415
+
+            s3_client = boto3.client("s3")
+        post = s3_client.generate_presigned_post(
+            Bucket=bucket, Key=key, Fields={"Content-Type": ctype},
+            Conditions=[{"Content-Type": ctype}, ["content-length-range", 1, self.MAX_EVIDENCE_BYTES]], ExpiresIn=300)
+        return {"upload": post, "key": key, "max_bytes": self.MAX_EVIDENCE_BYTES, "expires_in": 300}
 
     # ---- reviews ---------------------------------------------------------
     def add_review(self, claim_id: str, body: dict, principal: dict) -> dict:

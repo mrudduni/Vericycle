@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "services" / "review_api"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "services" / "evidence"))
 os.environ["AUTH_MODE"] = "dev"
 
 from review.handler import build_service, handler  # noqa: E402
@@ -121,3 +122,34 @@ def test_handler_confirmation_correction_is_applied():
     eff = effective_events((ho, corr))
     assert eff[0].fields["count"].field_status().value == "HANDLER_CONFIRMED"
     assert ho.fields["count"].field_status().value == "BUYER_REPORTED"  # original untouched
+
+
+class FakeS3:
+    def __init__(self):
+        self.calls = []
+
+    def generate_presigned_post(self, **kw):
+        self.calls.append(kw)
+        return {"url": "https://s3.example/bkt", "fields": {"key": kw["Key"]}}
+
+
+def test_presign_evidence_limits_and_ownership(svc):
+    s3 = FakeS3()
+    me = {"role": "RECYCLER", "party_id": "REC-01"}
+    out = svc.presign_evidence(me, {"claim_id": "C-101", "kind": "PHOTO", "content_type": "image/jpeg"}, "bkt", s3)
+    assert out["key"].startswith("evidence/C-101/PHOTO/") and out["key"].endswith(".jpg")
+    assert ["content-length-range", 1, 10 * 1024 * 1024] in s3.calls[0]["Conditions"]
+    from review.service import ApiError
+    import pytest as _p
+    for who, body, code in [
+        ({"role": "RECYCLER", "party_id": "REC-02"}, {"claim_id": "C-101", "kind": "PHOTO", "content_type": "image/jpeg"}, "FORBIDDEN"),
+        ({"role": "AUDITOR", "party_id": "AUD-01"}, {"claim_id": "C-101", "kind": "PHOTO", "content_type": "image/jpeg"}, "FORBIDDEN"),
+        (me, {"claim_id": "C-101", "kind": "VIRUS", "content_type": "image/jpeg"}, "INVALID_KIND"),
+        (me, {"claim_id": "C-101", "kind": "PHOTO", "content_type": "text/html"}, "INVALID_CONTENT_TYPE"),
+    ]:
+        with _p.raises(ApiError) as e:
+            svc.presign_evidence(who, body, "bkt", s3)
+        assert e.value.code == code
+    # the generated key is exactly what the evidence processor accepts
+    from evidence.handler import parse_key
+    assert parse_key(out["key"]) == ("C-101", "PHOTO")

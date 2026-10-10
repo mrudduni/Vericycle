@@ -73,7 +73,7 @@ export default function ClaimDetail({ id }: { id: string }) {
           {run && <p className="small muted">Last run {fmtDateTime(run.ran_at)} · {run.run_id}</p>}
         </div>
         <div className="actions noprint">
-          {isAuditor && <button className="btn" disabled={busy} onClick={() => act(() => runCheck(id))}>{busy ? t('running') : t('runClaimGuard')}</button>}
+          {isAuditor && <button className="btn" disabled={busy} onClick={() => act(() => runCheck(id, d?.run?.ran_at))}>{busy ? t('running') : t('runClaimGuard')}</button>}
           <button className="btn secondary" onClick={() => window.print()}>{t('print')}</button>
           {session?.role !== 'RECYCLER' && (
             <label className="toggle"><input type="checkbox" checked={recView} onChange={(e) => setRecView(e.target.checked)} /> {t('recyclerView')}</label>
