@@ -5,7 +5,7 @@ set -euo pipefail
 STAGE="${1:?stage}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION=ap-south-1
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 S="$(tr '[:lower:]' '[:upper:]' <<< "${STAGE:0:1}")${STAGE:1}"
-aws_() { aws --profile "$PROFILE" --region "$REGION" "$@"; }
+aws_() { if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then aws --region "$REGION" "$@"; else aws --profile "$PROFILE" --region "$REGION" "$@"; fi; }
 API_URL=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
 POOL=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/auth/user-pool-id" --query Parameter.Value --output text)
 CLIENT=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/auth/user-pool-client-id-capture" --query Parameter.Value --output text)
