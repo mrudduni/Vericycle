@@ -12,4 +12,7 @@
 
 | Library | Used in | Licence |
 |---|---|---|
-| (none yet) | | |
+| cryptography | ledger signatures | Apache-2.0 / BSD-3-Clause |
+| boto3 | AWS adapters | Apache-2.0 |
+| cedarpy | Cedar policy tests | Apache-2.0 |
+| pytest | tests | MIT |
