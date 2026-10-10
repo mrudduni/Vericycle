@@ -52,7 +52,7 @@ def build(web_url: str):
     repo, signer = MemoryRepo(), LocalSigner()
     seed_demo.seed(repo, signer, log=lambda *_: None)
     uploads = Uploads()
-    svc = CaptureService(repo, signer, LocalCedarAuthorizer(), Settings(web_url=web_url, wa_number="910000000000"),
+    svc = CaptureService(repo, signer, LocalCedarAuthorizer(), Settings(web_url=web_url, wa_number=None),
                          presigner=lambda key, ct, size, sha: f"/_upload/{key}")
 
     class Digests:
