@@ -7,7 +7,7 @@ OUT="$ROOT/.build/chaintrack"
 rm -rf "$OUT" && mkdir -p "$OUT/deps" "$OUT/app"
 
 uv pip install --quiet --python-platform aarch64-manylinux2014 --python-version 3.12 --only-binary :all: \
-  --target "$OUT/deps/python" "cryptography>=42" "pyyaml>=6"
+  --target "$OUT/deps/python" "cryptography>=42" "pyyaml>=6" "segno>=1.6"
 
 # One code asset shared by every ChainTrack function (handlers pick their module).
 cp -r "$ROOT/services/ledger/ledger" "$OUT/app/"

@@ -181,7 +181,7 @@ export class CaptureStack extends Stack {
       topic.addSubscription(new subs.LambdaSubscription(wa, { deadLetterQueue: dlq }));
       for (const f of [wa, transcribeDone]) {
         f.addToRolePolicy(new iam.PolicyStatement({
-          actions: ['social-messaging:SendWhatsAppMessage', 'social-messaging:GetWhatsAppMessageMedia'],
+          actions: ['social-messaging:SendWhatsAppMessage', 'social-messaging:GetWhatsAppMessageMedia', 'social-messaging:PostWhatsAppMessageMedia'],
           resources: [props.waPhoneNumberId],
         }));
         f.addToRolePolicy(new iam.PolicyStatement({ actions: ['kms:Encrypt', 'kms:Decrypt'], resources: [core.dataKey.keyArn] }));

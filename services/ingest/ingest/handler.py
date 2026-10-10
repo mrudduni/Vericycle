@@ -35,13 +35,23 @@ def ingest() -> WhatsAppIngest:
                                               originationPhoneNumberId=origin or os.environ["WA_PHONE_NUMBER_ID"],
                                               destinationS3File={"bucketName": svc.settings.evidence_bucket, "key": key})
 
+        s3 = boto3.client("s3", region_name=REGION)
+
+        def upload_image(origin, png):
+            import hashlib
+            key = f"qr/{hashlib.sha256(png).hexdigest()[:24]}.png"
+            s3.put_object(Bucket=svc.settings.evidence_bucket, Key=key, Body=png, ContentType="image/png")
+            r = social.post_whatsapp_message_media(originationPhoneNumberId=origin or os.environ["WA_PHONE_NUMBER_ID"],
+                                                   sourceS3File={"bucketName": svc.settings.evidence_bucket, "key": key})
+            return r["mediaId"]
+
         _ingest = WhatsAppIngest(
             svc, hmac=KmsPhoneHasher(os.environ["PHONE_HMAC_KEY_ARN"], REGION), send=send, fetch_media=fetch,
             encrypt=lambda s: base64.b64encode(kms.encrypt(KeyId=data_key, Plaintext=s.encode(),
                                                            EncryptionContext={"use": "wa-reply"})["CiphertextBlob"]).decode(),
             decrypt=lambda s: kms.decrypt(CiphertextBlob=base64.b64decode(s),
                                           EncryptionContext={"use": "wa-reply"})["Plaintext"].decode(),
-            extractor=extractor(), transcriber=transcriber())
+            extractor=extractor(), transcriber=transcriber(), upload_image=upload_image)
     return _ingest
 
 

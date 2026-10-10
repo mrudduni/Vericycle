@@ -57,6 +57,19 @@ def parse_sns(record_message: str) -> list[Inbound]:
     return out
 
 
+def qr_png(url: str) -> bytes:
+    """QR codes only ever encode a URL (CONTRACT §4)."""
+    import io
+    import segno
+    buf = io.BytesIO()
+    segno.make(url, error="m").save(buf, kind="png", scale=8, border=3)
+    return buf.getvalue()
+
+
+def image_msg(to: str, media_id: str, caption: str) -> dict:
+    return {"messaging_product": "whatsapp", "to": to, "type": "image", "image": {"id": media_id, "caption": caption[:1024]}}
+
+
 def text_msg(to: str, body: str) -> dict:
     return {"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": body, "preview_url": True}}
 
@@ -72,10 +85,12 @@ class WhatsAppIngest:
 
     def __init__(self, svc, *, hmac: Callable[[str], str], send: Callable[[str, dict], None],
                  fetch_media: Callable[[str, str, str], None], encrypt: Callable[[str], str],
-                 decrypt: Callable[[str], str], extractor, transcriber):
+                 decrypt: Callable[[str], str], extractor, transcriber,
+                 upload_image: Callable[[str, bytes], str] | None = None):
         self.svc, self.hmac, self.send = svc, hmac, send
         self.fetch_media, self.encrypt, self.decrypt = fetch_media, encrypt, decrypt
         self.extractor, self.transcriber = extractor, transcriber
+        self.upload_image = upload_image   # (origin, png) -> WhatsApp media id; None = links only
 
     # -- helpers -------------------------------------------------------------------------------
     def _reply(self, m: Inbound, payload: dict):
@@ -183,6 +198,14 @@ class WhatsAppIngest:
         if r.get("receipt_note"):
             lines.append(r["receipt_note"]["hi"] + "\n" + r["receipt_note"]["en"])
         self._reply(m, text_msg(m.sender, "\n".join(lines)))
+        if self.upload_image:
+            qrs = [(r["receipt_url"], "① अगला ख़रीदार यह स्कैन करे / Next buyer scans this")]
+            if r.get("wa_confirm_link") or r.get("confirm_url"):
+                qrs.append((r.get("wa_confirm_link") or r["confirm_url"],
+                            "② बेचने वाला अपने फ़ोन से स्कैन करे / Seller scans this with THEIR phone"))
+            for url, caption in qrs:
+                media_id = self.upload_image(m.phone_number_id, qr_png(url))
+                self._reply(m, image_msg(m.sender, media_id, caption))
         return "confirmed"
 
     def _handler_confirm(self, m: Inbound, code: str, sender_hmac: str) -> str:
