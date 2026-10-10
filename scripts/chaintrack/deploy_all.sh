@@ -41,12 +41,12 @@ echo "$REGION OK" | tee -a "$LOG"
 
 say "4/9 CDK bootstrap"
 if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region $REGION >/dev/null 2>&1; then
-  (cd "$ROOT/infra/chaintrack" && npm ci --no-audit --no-fund >/dev/null && run npx cdk bootstrap "aws://$ACCOUNT/$REGION") || fail "bootstrap"
+  (cd "$ROOT/infra/chaintrack" && rm -rf node_modules && npm ci --no-audit --no-fund >/dev/null && run npx cdk bootstrap "aws://$ACCOUNT/$REGION") || fail "bootstrap"
 else echo "already bootstrapped" | tee -a "$LOG"; fi
 
 say "5/9 build Lambda assets"
 run bash "$ROOT/scripts/chaintrack/build_lambdas.sh" || fail "build_lambdas"
-cd "$ROOT/infra/chaintrack" && npm ci --no-audit --no-fund >/dev/null
+cd "$ROOT/infra/chaintrack" && rm -rf node_modules && npm ci --no-audit --no-fund >/dev/null
 
 say "6/9 deploy Core + CaptureWeb"
 run npx cdk deploy -c stage="$STAGE" -c region="$REGION" "OAE-$S-Core" "OAE-$S-CaptureWeb" --require-approval never || fail "Core/CaptureWeb"

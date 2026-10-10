@@ -11,6 +11,8 @@ POOL=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/auth/user-pool-id" --quer
 CLIENT=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/auth/user-pool-client-id-capture" --query Parameter.Value --output text)
 APP_ID=$(aws_ cloudformation describe-stacks --stack-name "OAE-$S-CaptureWeb" --query "Stacks[0].Outputs[?OutputKey=='AppId'].OutputValue" --output text)
 cd "$ROOT/web-capture"
+# Clean install for THIS machine: node_modules made on another OS lacks the native build binaries.
+rm -rf node_modules && npm ci --no-audit --no-fund
 VITE_API_URL="$API_URL" VITE_USER_POOL_ID="$POOL" VITE_USER_POOL_CLIENT_ID="$CLIENT" VITE_AWS_REGION="$REGION" VITE_DEV_AUTH=0 npm run build
 node scripts/size.mjs
 rm -f /tmp/oae-web.zip && (cd dist && zip -qr /tmp/oae-web.zip .)
