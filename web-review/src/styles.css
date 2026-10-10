@@ -182,7 +182,10 @@ table.claims { width: 100%; border-collapse: collapse; }
 .srcbody .kv { grid-template-columns: 80px 1fr; margin: 10px 0; }
 
 @media print {
-  .noprint, .top, .scrim, .drawer { display: none !important; }
+  @page { size: A4; margin: 12mm; }
+  .noprint, .top, .scrim, .drawer, .btn, textarea, select, .toggle { display: none !important; }
+  html, body { min-width: 0 !important; }
+  .two { grid-template-columns: 1fr !important; }
   :root { --oae-bg: #fff; --oae-surface: #fff; --oae-text: #000; --oae-muted: #444; --heading: #17324d; --oae-green: #2e7d5b; }
   body { font-size: 11pt; }
   main { max-width: none; padding: 0; }

@@ -112,7 +112,19 @@ class ReviewService:
             claims_citing_batch=build_claims_citing_batch(claims),
             claim_submitted_at={c.claim_id: c.submitted_at for c in claims},
             ledger_reader=self.ledger,
+            satellite=self._satellite(),
         )
+
+    @staticmethod
+    def _satellite():
+        """R9 is opt-in (SATELLITE_R9=1): it needs rasterio and internet, so it is not in the default Lambda layer."""
+        import os  # noqa: PLC0415
+
+        if os.environ.get("SATELLITE_R9") != "1":
+            return None
+        from evidence.satellite import sentinel_provider  # noqa: PLC0415
+
+        return sentinel_provider
 
     def run_rule_family(self, claim_id: str, family: str) -> list[dict]:
         """One Step Functions branch. Returns JSON-able rule results."""

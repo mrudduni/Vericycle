@@ -25,3 +25,5 @@ class RuleContext:
     # claim_id -> submitted_at, for the same check's tie-break rule.
     claim_submitted_at: dict[str, object] = field(default_factory=dict)
     ledger_reader: object = None
+    # R9 only: callable (lat, lon, start_date, end_date) -> list[dict] of clear-sky observations (see rules/r9_satellite.py).
+    satellite: object = None

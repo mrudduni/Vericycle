@@ -27,7 +27,9 @@ ERRATUM_NOTE = (
 
 
 def _period_days(claim: Claim) -> float:
-    return (claim.period_end - claim.period_start).total_seconds() / 86400.0
+    """Days in the period. A period ending 23:59:59 counts as whole days (365, not 364.99999), so limits print as 26,400."""
+    days = (claim.period_end - claim.period_start).total_seconds() / 86400.0
+    return float(round(days)) if abs(days - round(days)) < 2 / 1440 else days
 
 
 def evaluate(claim: Claim, ctx: RuleContext) -> RuleResult:

@@ -22,6 +22,7 @@ from .rules import (
     r6_duplicates,
     r7_documents,
     r8_weight_drift,
+    r9_satellite,
 )
 
 
@@ -45,6 +46,8 @@ def run_family(claim: Claim, ctx: RuleContext, family: str) -> list[RuleResult]:
 def run_claim(claim: Claim, ctx: RuleContext) -> list[RuleResult]:
     """Runs every rule against one claim, in a fixed order (R1..R8)."""
     results = [r for fam in FAMILIES for r in run_family(claim, ctx, fam)]
+    if ctx.satellite is not None:  # stretch rule: only when a satellite provider is configured
+        results.append(r9_satellite.evaluate(claim, ctx))
     return sorted(results, key=lambda r: (r.rule_id[:2], r.rule_id))
 
 

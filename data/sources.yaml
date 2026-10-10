@@ -131,3 +131,12 @@
     demo (C-105, C-105b) match the Hapur case's dates in problem_statement.md.
     Not a real registered plant's coordinates; REC-03 in facilities.json is
     fictional.
+
+- id: sentinel-2-l2a-aws-open-data
+  title: "Sentinel-2 Level-2A, Registry of Open Data on AWS (Earth Search STAC)"
+  status: DEMO_VALUE
+  url: "https://registry.opendata.aws/sentinel-2-l2a-cogs/"
+  value: 1.5
+  note: >
+    Imagery is a real, public dataset; the 1.5x site-to-surroundings SWIR (B12) ratio that R9 treats as a thermal signal is a
+    DEMO VALUE, uncalibrated on real Indian plants (SOLUTION.md section 20). R9 never flags.

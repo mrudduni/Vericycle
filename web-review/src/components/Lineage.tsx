@@ -45,7 +45,7 @@ export default function LineageView({ lineage }: { lineage: LineageT }) {
             return (
               <g key={i} className="edge">
                 <path d={`M 20 ${ya + 18} C ${cx} ${ya + 40}, ${cx} ${yb - 40}, 20 ${yb - 18}`} fill="none" stroke="currentColor" strokeWidth="2" />
-                <text x="26" y={(ya + yb) / 2} fontSize="11" fill="currentColor">{e.kind}{e.weight_kg ? ` ${fmtNum(e.weight_kg)} kg` : ''}</text>
+                <text x="30" y={yb - 24} fontSize="11" fill="currentColor">{e.kind}{e.weight_kg ? ` ${fmtNum(e.weight_kg)} kg` : ''}</text>
               </g>
             );
           })}

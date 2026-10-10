@@ -56,7 +56,8 @@ FACILITY = Facility(
 def _r1_exact_limit_t(claim) -> float:
     """Reproduces r1_capacity's own limit arithmetic, so the boundary test
     checks the real boundary rather than an independently-rounded guess."""
-    period_days = (claim.period_end - claim.period_start).total_seconds() / 86400.0
+    days = (claim.period_end - claim.period_start).total_seconds() / 86400.0
+    period_days = float(round(days)) if abs(days - round(days)) < 2 / 1440 else days
     period_capacity_t = FACILITY.rated_t_per_hr * FACILITY.hours_per_day * (
         FACILITY.operating_days * (period_days / 365.0)
     )
