@@ -27,8 +27,18 @@ def handler(event, context):
     svc = service()
     if status != "COMPLETED":
         chat.complete_voice_draft(svc, draft_id, "", extractor(), error="Could not understand the voice note. Please try again or type it.")
+        _notify_whatsapp(draft_id)
         return {"draft_id": draft_id, "status": "FAILED"}
     text, lang = tr.read_transcript(s3, svc.settings.evidence_bucket, draft_id)
     logger.info("transcribed", extra={"draft_id": draft_id, "language": lang, "chars": len(text)})
     chat.complete_voice_draft(svc, draft_id, text, extractor(), transcript_key=f"transcripts/{draft_id}.json")
+    _notify_whatsapp(draft_id)
     return {"draft_id": draft_id, "status": "READY"}
+
+
+def _notify_whatsapp(draft_id: str) -> None:
+    """Drafts that came from WhatsApp get their card sent back there (no-op for web chat drafts)."""
+    if not os.environ.get("WA_PHONE_NUMBER_ID"):
+        return
+    from ingest.handler import ingest
+    ingest().notify_draft_ready(draft_id)

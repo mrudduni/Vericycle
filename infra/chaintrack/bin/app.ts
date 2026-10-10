@@ -25,6 +25,7 @@ new CaptureStack(app, `OAE-${S}-Capture`, {
   modelId: ctx('modelId', 'offline'),
   bedrockRegion: ctx('bedrockRegion', 'ap-south-1'),
   waNumber: ctx('waNumber', ''),
+  waPhoneNumberId: ctx('waPhoneNumberId', ''),
 });
 
 Tags.of(app).add('project', 'openaeye');

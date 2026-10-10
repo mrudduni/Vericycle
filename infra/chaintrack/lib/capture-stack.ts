@@ -9,6 +9,8 @@ import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwi from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwa from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -22,6 +24,7 @@ export interface CaptureStackProps extends StackProps, StageProps {
   modelId: string;          // Bedrock model or inference profile ID; "offline" = deterministic reader
   bedrockRegion: string;
   waNumber: string;         // digits only, or "" until the WhatsApp number is linked
+  waPhoneNumberId: string;  // EUMS phone-number-id ARN; "" = WhatsApp resources not deployed
 }
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -71,6 +74,7 @@ export class CaptureStack extends Stack {
       BEDROCK_REGION: props.bedrockRegion,
       WEB_URL: props.webUrl,
       WA_NUMBER: props.waNumber,
+      WA_PHONE_NUMBER_ID: props.waPhoneNumberId,
       POWERTOOLS_SERVICE_NAME: 'chaintrack',
       POWERTOOLS_LOG_LEVEL: 'INFO',
     };
@@ -130,6 +134,42 @@ export class CaptureStack extends Stack {
     for (const f of [api, transcribeDone, digest]) {
       nag(f.role!, 'AwsSolutions::AwsSolutions-IAM4[Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole]',
         'Basic execution role only grants CloudWatch Logs writes for this function.');
+    }
+
+    // --- WhatsApp via End User Messaging Social (only once a number is linked) -------------
+    if (props.waPhoneNumberId) {
+      const topic = new sns.Topic(this, 'WhatsAppInbound', {
+        topicName: `oae-${stage}-whatsapp-inbound`, masterKey: core.dataKey, enforceSSL: true,
+      });
+      topic.addToResourcePolicy(new iam.PolicyStatement({
+        principals: [new iam.ServicePrincipal('social-messaging.amazonaws.com')],
+        actions: ['sns:Publish'], resources: [topic.topicArn],
+        conditions: { StringEquals: { 'aws:SourceAccount': this.account } },
+      }));
+      core.dataKey.grantEncryptDecrypt(new iam.ServicePrincipal('social-messaging.amazonaws.com'));
+      const wa = fn('whatsapp-ingest', 'ingest.handler.handler', 60);
+      topic.addSubscription(new subs.LambdaSubscription(wa));
+      for (const f of [wa, transcribeDone]) {
+        f.addToRolePolicy(new iam.PolicyStatement({
+          actions: ['social-messaging:SendWhatsAppMessage', 'social-messaging:GetWhatsAppMessageMedia'],
+          resources: [props.waPhoneNumberId],
+        }));
+        f.addToRolePolicy(new iam.PolicyStatement({ actions: ['kms:Encrypt', 'kms:Decrypt'], resources: [core.dataKey.keyArn] }));
+      }
+      wa.addToRolePolicy(ledgerRw);
+      for (const st of [
+        new iam.PolicyStatement({ actions: ['kms:Sign', 'kms:GetPublicKey'], resources: [core.signingKey.keyArn] }),
+        new iam.PolicyStatement({ actions: ['kms:GenerateMac'], resources: [core.phoneHmacKey.keyArn] }),
+        new iam.PolicyStatement({ actions: ['verifiedpermissions:IsAuthorized'], resources: [`arn:aws:verifiedpermissions::${this.account}:policy-store/${core.policyStoreId}`] }),
+        new iam.PolicyStatement({ actions: ['ssm:GetParameter'], resources: [modelParam.parameterArn] }),
+        new iam.PolicyStatement({ actions: ['bedrock:InvokeModel'], resources: ['arn:aws:bedrock:*::foundation-model/*', `arn:aws:bedrock:*:${this.account}:inference-profile/*`] }),
+        new iam.PolicyStatement({ actions: ['transcribe:StartTranscriptionJob', 'transcribe:TagResource'], resources: [`arn:aws:transcribe:${this.region}:${this.account}:transcription-job/oae-${stage}-*`] }),
+      ]) wa.addToRolePolicy(st);
+      core.evidenceBucket.grantRead(wa);
+      core.evidenceBucket.grantPut(wa);
+      nag(wa.role!, 'AwsSolutions::AwsSolutions-IAM4[Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole]',
+        'Basic execution role only grants CloudWatch Logs writes for this function.');
+      new CfnOutput(this, 'WhatsAppTopicArn', { value: topic.topicArn, description: 'Set as the event destination of the WABA in the EUMS console' });
     }
 
     // --- Transcribe completion -> draft READY (no Lambda sleeps) ---------------------------
