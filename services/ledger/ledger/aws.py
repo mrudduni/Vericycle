@@ -79,18 +79,22 @@ class DynamoStore:
         pk = f"BATCH#{event['batch_id']}"
         ev_item = dict(event, PK=pk, SK=f"EVT#{event['seq']:06d}",
                        GSI2PK=f"PARTY#{event['actor_party_id']}", GSI2SK=event["at_server"])
-        names = {"#ls": "last_seq", "#lh": "last_hash", "#st": "status", "#pb": "parent_batch_ids", "#cb": "child_batch_ids"}
-        values: dict[str, Any] = {":ls": event["seq"], ":lh": event["hash"], ":open": "OPEN", ":empty": []}
+        # Only placeholders that the expression uses: DynamoDB rejects unused names and values.
+        names: dict[str, str] = {"#ls": "last_seq", "#lh": "last_hash"}
+        values: dict[str, Any] = {":ls": event["seq"], ":lh": event["hash"]}
         sets = ["#ls = :ls", "#lh = :lh"]
         updates = {k: v for k, v in head_updates.items() if v is not None}
         for i, (k, v) in enumerate(sorted(updates.items())):
             names[f"#u{i}"] = k
             values[f":u{i}"] = v
             sets.append(f"#u{i} = :u{i}")
-        for key, default in (("status", ":open"), ("parent_batch_ids", ":empty"), ("child_batch_ids", ":empty")):
+        defaults = {"status": ("#st", ":open", "OPEN"), "parent_batch_ids": ("#pb", ":empty", []),
+                    "child_batch_ids": ("#cb", ":empty", [])}
+        for key, (alias, placeholder, default) in defaults.items():
             if key not in updates:
-                alias = {"status": "#st", "parent_batch_ids": "#pb", "child_batch_ids": "#cb"}[key]
-                sets.append(f"{alias} = if_not_exists({alias}, {default})")
+                names[alias] = key
+                values[placeholder] = default
+                sets.append(f"{alias} = if_not_exists({alias}, {placeholder})")
         if expected_last_seq == 0:
             cond = "attribute_not_exists(PK)"
         else:
