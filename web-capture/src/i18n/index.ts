@@ -8,6 +8,7 @@ const en = {
   home: { chat: 'Record a handover', scan: 'Scan a QR', batch: 'Open a batch', verify: 'Check a record', privacy: 'Privacy' },
   chat: {
     hello: 'Namaste! Tell me what you bought: send a voice note or type, e.g. "4 e-rickshaw batteries from a driver, about 120 kg".',
+    helloTyped: 'Namaste! Type what you bought, e.g. "4 e-rickshaw batteries from a driver, about 120 kg".',
     privacyLink: 'How we use this', placeholder: 'Type a message', hold: 'Hold to record', recording: 'Recording… release to send',
     listening: 'Listening to your voice note…', uncertain: 'Please check', confirm: 'Correct', edit: 'Change',
     saved: 'Saved. Show these to the next person.', nextHandler: 'Next buyer scans this', seller: 'Seller confirms on their own phone',
@@ -57,6 +58,7 @@ const hi: typeof en = {
   home: { chat: 'ख़रीद दर्ज करें', scan: 'QR स्कैन करें', batch: 'बैच खोलें', verify: 'रिकॉर्ड जाँचें', privacy: 'गोपनीयता' },
   chat: {
     hello: 'नमस्ते! बताइए आपने क्या ख़रीदा: वॉइस नोट भेजें या लिखें, जैसे "चार ई-रिक्शा बैटरी ड्राइवर से, लगभग 120 किलो"।',
+    helloTyped: 'नमस्ते! लिखिए आपने क्या ख़रीदा, जैसे "चार ई-रिक्शा बैटरी ड्राइवर से, लगभग 120 किलो"।',
     privacyLink: 'हम इसका क्या करते हैं', placeholder: 'संदेश लिखें', hold: 'दबाकर रखें और बोलें', recording: 'रिकॉर्ड हो रहा है… छोड़ें तो भेजें',
     listening: 'आपका वॉइस नोट सुन रहे हैं…', uncertain: 'कृपया जाँचें', confirm: 'सही है', edit: 'बदलें',
     saved: 'दर्ज हो गया। अगले व्यक्ति को यह दिखाएँ।', nextHandler: 'अगला ख़रीदार यह स्कैन करे', seller: 'बेचने वाला अपने फ़ोन से पुष्टि करे',

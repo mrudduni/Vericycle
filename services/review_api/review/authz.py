@@ -77,7 +77,7 @@ def _avp_value(v: Any) -> dict:
 
 
 class AvpAuthorizer:
-    def __init__(self, policy_store_id: str, region: str = "ap-south-1", client=None):
+    def __init__(self, policy_store_id: str, region: str = "ap-southeast-2", client=None):
         if client is None:
             import boto3  # noqa: PLC0415
 

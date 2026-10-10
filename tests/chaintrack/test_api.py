@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("aws_lambda_powertools")
 pytest.importorskip("cedarpy")
-os.environ.setdefault("AWS_DEFAULT_REGION", "ap-south-1")
+os.environ.setdefault("AWS_DEFAULT_REGION", "ap-southeast-2")
 os.environ.setdefault("IDEMPOTENCY_TABLE", "test")
 os.environ.setdefault("POWERTOOLS_TRACE_DISABLED", "1")
 
@@ -24,7 +24,7 @@ import seed_demo
 class Ctx:
     function_name = "capture-api"
     memory_limit_in_mb = 512
-    invoked_function_arn = "arn:aws:lambda:ap-south-1:000000000000:function:capture-api"
+    invoked_function_arn = "arn:aws:lambda:ap-southeast-2:000000000000:function:capture-api"
     aws_request_id = "req-1"
     def get_remaining_time_in_millis(self):
         return 30000

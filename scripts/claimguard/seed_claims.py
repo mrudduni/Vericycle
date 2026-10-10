@@ -27,7 +27,7 @@ def main() -> None:
 
     import boto3
 
-    session = boto3.Session(profile_name=a.profile, region_name="ap-south-1")
+    session = boto3.Session(profile_name=a.profile, region_name="ap-southeast-2")
     ssm = session.client("ssm")
     param = lambda n: ssm.get_parameter(Name=n)["Parameter"]["Value"]  # noqa: E731
     claims_table = session.resource("dynamodb").Table(param(f"/openaeye/{a.stage}/claims/table-name"))

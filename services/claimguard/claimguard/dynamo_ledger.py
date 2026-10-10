@@ -26,7 +26,7 @@ def _plain(v: Any) -> Any:
 
 
 class DynamoLedgerReader:
-    def __init__(self, table_name: str, region: str = "ap-south-1", table=None):
+    def __init__(self, table_name: str, region: str = "ap-southeast-2", table=None):
         if table is None:
             import boto3  # noqa: PLC0415
 

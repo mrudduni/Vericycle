@@ -17,7 +17,7 @@ from ..aws import KmsSigner, _plain
 from ..digest import IST, build_digest
 
 logger = Logger(service="ledger-digest")
-REGION = os.environ.get("AWS_REGION", "ap-south-1")
+REGION = os.environ.get("AWS_REGION", "ap-southeast-2")
 
 
 def _events_for(ddb, table: str, day: date) -> list[dict]:

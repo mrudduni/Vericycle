@@ -21,7 +21,7 @@ sys.path[:0] = [str(ROOT / p) for p in ("services/ledger", "services/capture_api
 os.environ.setdefault("POWERTOOLS_TRACE_DISABLED", "1")
 os.environ.setdefault("POWERTOOLS_IDEMPOTENCY_DISABLED", "1")
 os.environ.setdefault("IDEMPOTENCY_TABLE", "local")
-os.environ.setdefault("AWS_DEFAULT_REGION", "ap-south-1")
+os.environ.setdefault("AWS_DEFAULT_REGION", "ap-southeast-2")
 
 from capture.authz import LocalCedarAuthorizer  # noqa: E402
 from capture.handlers import api  # noqa: E402
@@ -35,7 +35,7 @@ import seed_demo  # noqa: E402
 class Ctx:
     function_name = "local"
     memory_limit_in_mb = 512
-    invoked_function_arn = "arn:aws:lambda:ap-south-1:000000000000:function:local"
+    invoked_function_arn = "arn:aws:lambda:ap-southeast-2:000000000000:function:local"
     aws_request_id = "local"
 
     def get_remaining_time_in_millis(self):

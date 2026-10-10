@@ -70,7 +70,7 @@ def _main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Verify a batch's hash chain and KMS signatures")
     ap.add_argument("--stage", required=True)
     ap.add_argument("--batch", required=True)
-    ap.add_argument("--region", default=os.environ.get("AWS_REGION") or "ap-south-1")
+    ap.add_argument("--region", default=os.environ.get("AWS_REGION") or "ap-southeast-2")
     args = ap.parse_args(argv)
     from .aws import DynamoStore, KmsSigner  # boto3 only here
 

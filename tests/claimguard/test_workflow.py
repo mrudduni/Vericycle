@@ -42,12 +42,12 @@ class FakeSfn:
 
     def start_execution(self, **kw):
         self.calls.append(kw)
-        return {"executionArn": "arn:aws:states:ap-south-1:1:execution:m:" + kw["name"]}
+        return {"executionArn": "arn:aws:states:ap-southeast-2:1:execution:m:" + kw["name"]}
 
 
 def test_check_route_starts_workflow_when_configured():
     svc, sfn = build_service(), FakeSfn()
-    os.environ["STATE_MACHINE_ARN"] = "arn:aws:states:ap-south-1:1:stateMachine:m"
+    os.environ["STATE_MACHINE_ARN"] = "arn:aws:states:ap-southeast-2:1:stateMachine:m"
     try:
         r = handler({"requestContext": {"http": {"method": "POST"}}, "rawPath": "/claims/C-102/check",
                      "headers": {"x-dev-role": "AUDITOR", "x-dev-party": "AUD-01"}}, None, service=svc, sfn_client=sfn)

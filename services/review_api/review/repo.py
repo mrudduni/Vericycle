@@ -76,7 +76,7 @@ class DynamoRepo:
     """Claims table (CONTRACT §6): CLAIM#<id>/META, CLAIM#<id>/RUN#<ran_at>, CLAIM#<id>/REVIEW#<seq 6>,
     CLAIM#<id>/BATCH#<id> (+ GSI1 BATCH# -> CLAIM#), FACILITY#<party>/META, EV#<id>/META."""
 
-    def __init__(self, table_name: str, region: str = "ap-south-1", table=None):
+    def __init__(self, table_name: str, region: str = "ap-southeast-2", table=None):
         if table is None:
             import boto3  # noqa: PLC0415
 

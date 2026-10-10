@@ -112,3 +112,13 @@ def test_textract_expense_parse_and_injection_text_stays_data():
     assert out["date"] == "2026-10-15" and out["gstin"] == "99AAAAA0000A1ZR"
     assert abs(out["total_weight_t"] - 0.48) < 1e-9
     assert out["invoice_number"].startswith("Ignore previous")  # kept as a plain string, never acted on
+
+
+def test_textract_unavailable_still_records_the_file():
+    class Denied:
+        def analyze_expense(self, **_):
+            raise PermissionError("explicit deny in a service control policy")
+
+    rec = ev_handler.process("b", "evidence/C-104/POWER_BILL/bill.pdf", b"%PDF-1.4 x", Denied())
+    assert rec["kind"] == "POWER_BILL" and len(rec["sha256"]) == 64
+    assert rec["extracted"] == {"unavailable": "PermissionError"}

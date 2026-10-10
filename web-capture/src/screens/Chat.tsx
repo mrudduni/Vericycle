@@ -17,10 +17,12 @@ type Msg =
 
 const SOURCES = ['DRIVER', 'HOUSEHOLD', 'TECHNICIAN', 'RETAIL_EXCHANGE', 'INSTITUTION', 'OTHER', 'UNKNOWN'];
 const MATERIALS = ['BATTERY_LEAD_ACID', 'EWASTE_PHONE', 'AC_REFRIGERANT'];
+// Off where Amazon Transcribe is unavailable to the deployment; the chat is then typed only.
+const VOICE = (import.meta.env.VITE_VOICE as string | undefined) !== 'off';
 
 export default function Chat() {
   const { t, i18n } = useTranslation();
-  const [msgs, setMsgs] = useState<Msg[]>([{ id: 'hello', from: 'bot', text: t('chat.hello'), privacy: true }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{ id: 'hello', from: 'bot', text: t(VOICE ? 'chat.hello' : 'chat.helloTyped'), privacy: true }]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -112,8 +114,8 @@ export default function Chat() {
       <form className="composer" onSubmit={(e) => { e.preventDefault(); void sendText(); }}>
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder={recording ? t('chat.recording') : t('chat.placeholder')}
           aria-label={t('chat.placeholder')} lang={i18n.language} enterKeyHint="send" disabled={!online} />
-        {text.trim()
-          ? <button className="send" type="submit" aria-label="Send" disabled={busy}>➤</button>
+        {text.trim() || !VOICE
+          ? <button className="send" type="submit" aria-label="Send" disabled={busy || !text.trim()}>➤</button>
           : <button type="button" className={`mic ${recording ? 'rec' : ''}`} aria-label={t('chat.hold')} title={t('chat.hold')}
               disabled={!online || busy}
               onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); void startRec(); }}

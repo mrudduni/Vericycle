@@ -137,7 +137,7 @@ def seed(repo, signer, log=print) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage")
-    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-south-1")
+    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-southeast-2")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
     if a.dry_run:

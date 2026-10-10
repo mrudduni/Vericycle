@@ -3,7 +3,7 @@
 #   scripts/claimguard/deploy_web.sh mrudduni            # dev auth (picker), fixture-backed stage
 #   scripts/claimguard/deploy_web.sh prod prod           # Cognito sign-in using ChainTrack stage "prod"
 set -euo pipefail
-STAGE="${1:?stage}"; AUTH_STAGE="${2:-}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION=ap-south-1
+STAGE="${1:?stage}"; AUTH_STAGE="${2:-}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION=ap-southeast-2
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 S="$(tr '[:lower:]' '[:upper:]' <<< "${STAGE:0:1}")${STAGE:1}"
 aws_() { aws --profile "$PROFILE" --region "$REGION" "$@"; }

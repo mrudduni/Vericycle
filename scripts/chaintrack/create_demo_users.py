@@ -31,7 +31,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True)
     ap.add_argument("--profile", default=os.environ.get("AWS_PROFILE"))
-    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-south-1")
+    ap.add_argument("--region", default=__import__("os").environ.get("AWS_REGION") or "ap-southeast-2")
     a = ap.parse_args(argv)
     if a.stage == "mrudduni":
         ap.error("never touch Mrudduni's stage")

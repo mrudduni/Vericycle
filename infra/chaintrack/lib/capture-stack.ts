@@ -26,6 +26,7 @@ export interface CaptureStackProps extends StackProps, StageProps {
   webUrl: string;
   modelId: string;          // Bedrock model or inference profile ID; "offline" = deterministic reader
   bedrockRegion: string;
+  voice: boolean;           // false where Amazon Transcribe is unavailable; the chat then asks for typed text
   waNumber: string;         // digits only, or "" until the WhatsApp number is linked
   waPhoneNumberId: string;  // EUMS phone-number-id ARN; "" = WhatsApp resources not deployed
   alarmEmail: string;       // "" = alarms go to the SNS topic only
@@ -100,6 +101,7 @@ export class CaptureStack extends Stack {
       IDEMPOTENCY_TABLE: idemTable.tableName,
       MODEL_ID_PARAM: modelParam.parameterName,
       BEDROCK_REGION: props.bedrockRegion,
+      VOICE_MODE: props.voice ? 'on' : 'off',
       WEB_URL: props.webUrl,
       WA_NUMBER: props.waNumber,
       WA_PHONE_NUMBER_ID: props.waPhoneNumberId,

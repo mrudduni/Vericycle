@@ -44,7 +44,7 @@ Each owner's Python area has its own `pyproject.toml` (managed with `uv`), and e
 
 | Item | Choice |
 |---|---|
-| Region | `ap-south-1` (Mumbai) for every OpenAEye resource |
+| Region | `ap-southeast-2` (Sydney) for every OpenAEye resource, AWS account `206690614182` (changed from `ap-south-1` by agreement on 10 Oct 2026, see §10) |
 | Infrastructure | AWS CDK v2, TypeScript, one CDK app per owner, `cdk-nag` AwsSolutions pack on both |
 | Lambda runtime | Python 3.12, `arm64` (Graviton) |
 | Lambda utilities | Powertools for AWS Lambda (Python), via the public Powertools Lambda layer |
@@ -412,3 +412,5 @@ Wording rules for both UIs: a passing claim is "consistent with available data",
 | `/claims/{id}:check`, `/evidence:presign` | `/claims/{id}/check`, `/evidence/presign` | API Gateway path parameters must fill a whole segment |
 | WhatsApp only for F1 | WhatsApp via EUMS **plus** a WhatsApp-style chat screen in the PWA that calls the same pipeline | Meta number setup can take longer than the time left; the demo must not depend on it |
 | Demo script of 4 minutes (§18) | 3 minutes | Hackathon rule: video of up to three minutes, no live demo |
+| Mumbai (`ap-south-1`); data stays in India | Sydney (`ap-southeast-2`), account `206690614182`; the privacy page says so | Agreed by Mrudduni and Shaurya on 10 Oct 2026. Account 773870812969 never activated; the working account's organisation policy denies `ap-south-1`. Demo data is synthetic, so no real personal data leaves India |
+| Voice notes via Amazon Transcribe; slips and bills via Amazon Textract; WhatsApp via EUMS | Deployed with voice off (`-c voice=off`, `OAE_VOICE=off`): typed chat only. Textract failures record the file with `extracted.unavailable`. WhatsApp not deployed | The account's organisation policy denies Transcribe, Textract and End User Messaging Social. The code paths remain and are tested offline |

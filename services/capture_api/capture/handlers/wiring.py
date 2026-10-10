@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import json
+import logging
 import os
 
 import boto3
@@ -12,7 +13,7 @@ from ..authz import AvpAuthorizer, business_user
 from ..repo import DynamoRepo
 from ..service import CaptureService, Settings
 
-REGION = os.environ.get("AWS_REGION", "ap-south-1")
+REGION = os.environ.get("AWS_REGION", "ap-southeast-2")
 
 
 class S3Presigner:
@@ -92,10 +93,21 @@ def extractor():
     if not model:
         return bx.extract_offline
     client = boto3.client("bedrock-runtime", region_name=os.environ.get("BEDROCK_REGION", REGION))
-    return lambda text: bx.extract(text, model, client)
+
+    def run(text: str) -> dict:
+        # A model outage must not block a handover: the deterministic reader marks every field uncertain,
+        # so the collector checks them on the read-back card.
+        try:
+            return bx.extract(text, model, client)
+        except Exception:  # noqa: BLE001
+            logging.getLogger(__name__).warning("bedrock extraction failed; using deterministic reader", exc_info=True)
+            return bx.extract_offline(text)
+    return run
 
 
 def transcriber():
+    if os.environ.get("VOICE_MODE") == "off":
+        return None  # chat answers VOICE_UNAVAILABLE and asks for typed text
     from extract import transcribe as tr
 
     client = boto3.client("transcribe", region_name=REGION)

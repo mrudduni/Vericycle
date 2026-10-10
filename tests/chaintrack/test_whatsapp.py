@@ -23,7 +23,7 @@ H = lambda p: hashlib.sha256(b"k" + p.encode()).hexdigest()
 def sns(msgs):
     entry = {"id": "WABA", "changes": [{"field": "messages", "value": {"messaging_product": "whatsapp",
              "metadata": {"phone_number_id": "PNID"}, "messages": msgs}}]}
-    return json.dumps({"context": {"MetaPhoneNumberIds": [{"arn": "arn:aws:social-messaging:ap-south-1:1:phone-number-id/x"}]},
+    return json.dumps({"context": {"MetaPhoneNumberIds": [{"arn": "arn:aws:social-messaging:ap-southeast-2:1:phone-number-id/x"}]},
                        "whatsAppWebhookEntry": json.dumps(entry)})
 
 

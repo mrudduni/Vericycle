@@ -109,7 +109,7 @@ export function Privacy() {
     <main>
       <h2>{t('privacy.title')}</h2>
       <ul>{lines.map((l) => <li key={l} style={{ marginBottom: 8 }}>{l}</li>)}</ul>
-      <p className="small muted">Text is read by Amazon Transcribe and Amazon Bedrock in AWS region {(import.meta.env.VITE_AWS_REGION as string) || 'ap-south-1'}{((import.meta.env.VITE_AWS_REGION as string) || 'ap-south-1') === 'ap-south-1' ? ' (Mumbai, India)' : ' (test stage outside India; synthetic data only)'}.</p>
+      <p className="small muted">All data, including text read by Amazon Bedrock, is stored and processed in AWS region {(import.meta.env.VITE_AWS_REGION as string) || 'ap-southeast-2'}{((import.meta.env.VITE_AWS_REGION as string) || 'ap-southeast-2') === 'ap-southeast-2' ? ' (Sydney, Australia), outside India. This demo uses synthetic data only.' : '.'}</p>
     </main>
   );
 }

@@ -48,8 +48,14 @@ def process(bucket: str, key: str, data: bytes, textract=None) -> dict | None:
         meta = analyze_photo(data)
         rec.update(phash=meta["phash"], exif=meta["exif"])
     elif kind in ("INVOICE", "WEIGH_SLIP", "POWER_BILL") and textract is not None:
-        resp = textract.analyze_expense(Document={"Bytes": data})
-        rec["extracted"] = parse_expense(resp)
+        try:
+            resp = textract.analyze_expense(Document={"Bytes": data})
+        except Exception as e:  # noqa: BLE001 - e.g. Textract not offered or denied in the account
+            # Missing data is not fraud: the file, hash and kind are still recorded; rules reading
+            # extracted fields return INSUFFICIENT_EVIDENCE instead of failing the whole upload.
+            rec["extracted"] = {"unavailable": type(e).__name__}
+        else:
+            rec["extracted"] = parse_expense(resp)
     return rec
 
 

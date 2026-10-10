@@ -111,7 +111,7 @@ def extract(text: str, model_id: str, client=None) -> dict:
     if client is None:
         import boto3  # noqa: PLC0415
         import os  # noqa: PLC0415
-        client = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "ap-south-1")
+        client = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "ap-southeast-2")
     resp = client.converse(
         modelId=model_id,
         system=[{"text": SYSTEM}],

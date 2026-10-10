@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # One-shot deploy of ChainTrack to a stage, run from a normal terminal on your Mac.
 #   bash scripts/chaintrack/deploy_all.sh shaurya
+#   MODEL_ID=amazon.nova-lite-v1:0 OAE_VOICE=off bash scripts/chaintrack/deploy_all.sh prod   # account 206690614182 (no Transcribe)
 # Writes a log (no secrets) to ../deploy-<stage>.log next to the repo so Claude can read it.
 set -uo pipefail
-STAGE="${1:-shaurya}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION="${OAE_REGION:-ap-south-1}"
+STAGE="${1:-shaurya}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION="${OAE_REGION:-ap-southeast-2}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG="$ROOT/../deploy-$STAGE.log"
 S="$(tr '[:lower:]' '[:upper:]' <<< "${STAGE:0:1}")${STAGE:1}"
@@ -25,7 +26,7 @@ say "2/9 sign-in (profile $PROFILE)"
 if ! aws sts get-caller-identity --profile "$PROFILE" >/dev/null 2>&1; then
   echo "Opening the browser for aws login…" | tee -a "$LOG"
   aws configure set region "$REGION" --profile "$PROFILE"
-  # New-experience accounts sign in through their project's region (yours: Sydney); resources still go to Mumbai.
+  # New-experience accounts sign in through their project's region (Sydney), which is also where resources go.
   aws login --profile "$PROFILE" --region "${LOGIN_REGION:-ap-southeast-2}" || fail "aws login"
 fi
 ACCOUNT=$(aws sts get-caller-identity --profile "$PROFILE" --query Account --output text) || fail "sts"
@@ -55,7 +56,7 @@ echo "web $WEB" | tee -a "$LOG"
 
 say "7/9 deploy Capture (extraction model: ${MODEL_ID:-offline})"
 run npx cdk deploy -c stage="$STAGE" -c region="$REGION" -c webUrl="$WEB" -c webOrigins="$WEB,http://localhost:5173" \
-  -c modelId="${MODEL_ID:-offline}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} "OAE-$S-Capture" --require-approval never || fail "Capture"
+  -c modelId="${MODEL_ID:-offline}" -c voice="${OAE_VOICE:-on}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} "OAE-$S-Capture" --require-approval never || fail "Capture"
 API=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
 echo "api $API" | tee -a "$LOG"
 

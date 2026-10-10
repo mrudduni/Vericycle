@@ -63,7 +63,7 @@ def copilot_answer(svc: ReviewService, claim_id: str, question: str) -> dict:
     model_id = os.environ.get("COPILOT_MODEL_ID")
     if model_id and _LLM is None:
         try:
-            _LLM = make_llm_runner(svc.get_claim, model_id, os.environ.get("COPILOT_REGION", "ap-south-1"),
+            _LLM = make_llm_runner(svc.get_claim, model_id, os.environ.get("COPILOT_REGION", "ap-southeast-2"),
                                    os.environ.get("GUARDRAIL_ID") or None, os.environ.get("GUARDRAIL_VERSION") or None)
         except ImportError:
             _LLM = False
