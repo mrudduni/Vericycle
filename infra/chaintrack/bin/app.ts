@@ -3,6 +3,7 @@ import { App, Tags, Validations } from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { CoreStack } from '../lib/core-stack';
 import { CaptureStack } from '../lib/capture-stack';
+import { WebStack } from '../lib/web-stack';
 import { cap } from '../lib/common';
 
 const app = new App();
@@ -18,6 +19,7 @@ if (digestRetentionDays > 1 && !app.node.tryGetContext('approvedLongRetention'))
 
 const S = cap(stage);
 const core = new CoreStack(app, `OAE-${S}-Core`, { env, stage, webOrigins, digestRetentionDays });
+new WebStack(app, `OAE-${S}-CaptureWeb`, { env, stage });
 const ctx = (k: string, d: string) => String(app.node.tryGetContext(k) ?? d);
 new CaptureStack(app, `OAE-${S}-Capture`, {
   env, stage, core, webOrigins,

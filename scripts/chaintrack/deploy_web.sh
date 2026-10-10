@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Build web-capture against the stage's API and publish it to Amplify Hosting (manual deployment).
+#   scripts/chaintrack/deploy_web.sh shaurya
+set -euo pipefail
+STAGE="${1:?stage}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION=ap-south-1
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+S="$(tr '[:lower:]' '[:upper:]' <<< "${STAGE:0:1}")${STAGE:1}"
+aws_() { aws --profile "$PROFILE" --region "$REGION" "$@"; }
+API_URL=$(aws_ ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
+APP_ID=$(aws_ cloudformation describe-stacks --stack-name "OAE-$S-CaptureWeb" --query "Stacks[0].Outputs[?OutputKey=='AppId'].OutputValue" --output text)
+cd "$ROOT/web-capture"
+VITE_API_URL="$API_URL" VITE_DEV_AUTH=0 npm run build
+node scripts/size.mjs
+rm -f /tmp/oae-web.zip && (cd dist && zip -qr /tmp/oae-web.zip .)
+read -r JOB URL < <(aws_ amplify create-deployment --app-id "$APP_ID" --branch-name main --query '[jobId,zipUploadUrl]' --output text)
+curl -sS -T /tmp/oae-web.zip "$URL" >/dev/null
+aws_ amplify start-deployment --app-id "$APP_ID" --branch-name main --job-id "$JOB" >/dev/null
+echo "deploying job $JOB to https://main.$APP_ID.amplifyapp.com"
