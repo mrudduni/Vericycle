@@ -64,3 +64,11 @@ green, pushed to `mrudduni/claimguard`.
 
 **Blocked on:** the AWS account's `OptInRequired` error — needs your
 attention in the console before I can deploy anything.
+
+## 2026-10-10 (later): merge and MVP code complete, deploy blocked on AWS registration
+
+- Merged `shaurya/chaintrack` and `mrudduni/claimguard` into `main` (no file overlap). Tests on the merged tree: ClaimGuard 47, ChainTrack 95 (+1 skipped); web-capture and web-review build; both CDK apps synth cdk-nag clean (dev, live-ledger and copilot modes).
+- Built since the first entry: review API (list/submit/check, append-only reviews, recycler right to respond, lineage with confirmation status, impact numbers with sources); Dynamo claims repo and read-only Dynamo ledger reader that applies Shaurya's handler CORRECTION events; evidence processor (EXIF, SHA-256, dHash, deterministic light class feeding R5, Textract invoice parsing) on EventBridge; copilot (deterministic cited explanations always, optional Strands/Bedrock answer validated for citations, Guardrail); `infra/claimguard` CDK app; web-review dashboard (via a subagent; I re-ran its build, size budget and wording grep, not its browser e2e); `docs/DEPLOY.md`.
+- Findings worth knowing: (1) R6 pHash threshold tightened 6 -> 3 after measuring: re-encode moves a hash 1 bit, different photos of one yard can be within 6. (2) Shaurya's cdk-nag acknowledgements hard-coded `<AWS::AccountId>`, which fails synth once a real account resolves; fixed in `infra/chaintrack/lib/capture-stack.ts` (two lines). (3) My first fixture confirmed the wrong fields vs CONTRACT §8; fixed.
+- Not verified on AWS: nothing is deployed. The account returns `NotSignedUp` (S3) and `SubscriptionRequiredException` (Lambda, DynamoDB, KMS, SSM, Cognito); Bedrock works, Nova Lite listed in ap-south-1.
+- Not built: Step Functions orchestration (the engine runs in the review Lambda), AgentCore Runtime hosting (copilot runs in Lambda), Automated Reasoning checks, R9 satellite, Verified Permissions calls from the review API (a local `can_read_claim` mirrors the Cedar rules), claim-evidence presign endpoint (returns 501; upload with the console/CLI for now).
