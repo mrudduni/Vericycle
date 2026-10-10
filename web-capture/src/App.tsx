@@ -43,7 +43,7 @@ export default function App() {
         {path !== '/' && !path.startsWith('/c/') && <button className="back" aria-label="Back" onClick={() => (history.length > 1 ? history.back() : navigate('/'))}>←</button>}
         <h1>{title}</h1>
         {!path.startsWith('/c/') && <button onClick={() => setLang(i18n.language === 'hi' ? 'en' : 'hi')}>{t('lang')}</button>}
-        {s && !isPublic && <button onClick={() => { setSession(null); navigate('/'); }} aria-label={t('signOut')}>⎋</button>}
+        {s && !isPublic && <button onClick={() => { setSession(null); navigate('/'); }}>{t('signOut')}</button>}
       </header>
       {!isPublic && <QueueBanner />}
       {screen}

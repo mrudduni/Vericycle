@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import { load, save } from '../lib/store';
 
 const en = {
-  app: 'ChainTrack', lang: 'हिंदी', signIn: 'Sign in', signOut: 'Sign out', chooseAccount: 'Choose a demo account',
+  app: 'ChainTrack', lang: 'हिंदी', signIn: 'Sign in', signOut: 'Exit', chooseAccount: 'Choose a demo account',
   demoNote: 'Demo accounts only. Real sign-in is added once the team picks the method.',
   home: { chat: 'Record a handover', scan: 'Scan a QR', batch: 'Open a batch', verify: 'Check a record', privacy: 'Privacy' },
   chat: {
@@ -52,7 +52,7 @@ const en = {
 };
 
 const hi: typeof en = {
-  app: 'चेनट्रैक', lang: 'English', signIn: 'साइन इन', signOut: 'साइन आउट', chooseAccount: 'डेमो खाता चुनें',
+  app: 'चेनट्रैक', lang: 'English', signIn: 'साइन इन', signOut: 'बाहर', chooseAccount: 'डेमो खाता चुनें',
   demoNote: 'सिर्फ़ डेमो खाते। असली साइन-इन टीम का फ़ैसला होने के बाद जुड़ेगा।',
   home: { chat: 'ख़रीद दर्ज करें', scan: 'QR स्कैन करें', batch: 'बैच खोलें', verify: 'रिकॉर्ड जाँचें', privacy: 'गोपनीयता' },
   chat: {

@@ -46,7 +46,8 @@ export default function Batch({ id }: { id: string }) {
             <div style={{ fontWeight: 700 }}>{ev.seq}. {t(`type.${ev.type}`)} <span className="muted small">{ev.at_server?.slice(0, 16).replace('T', ' ')}</span></div>
             {ev.confirmation && <div style={{ margin: '4px 0' }}><Chip status={ev.confirmation.chip ? chipKey(ev.confirmation) : ev.confirmation.status} /></div>}
             <div className="small">
-              {Object.entries(ev.fields).map(([k, fv]: any) => <div key={k}><span className="muted">{k}:</span> {fieldText(k, fv, t)}</div>)}
+              {ev.type === 'CORRECTION' ? <CorrectionLine f={ev.fields} /> :
+                Object.entries(ev.fields).map(([k, fv]: any) => <div key={k}><span className="muted">{k}:</span> {fieldText(k, fv, t)}</div>)}
             </div>
             <div className="small muted">{ev.evidence_badge === 'EVIDENCE_ATTACHED' ? '📎 ' + t('batch.evidence') : '○ ' + t('batch.noEvidence')}</div>
           </li>
@@ -63,6 +64,17 @@ export default function Batch({ id }: { id: string }) {
       <p><Link to={`/v/${data.batch_id}`}>🔗 {t('batch.verify')}</Link></p>
     </main>
   );
+}
+
+function CorrectionLine({ f }: { f: any }) {
+  const { t } = useTranslation();
+  const reason = f.reason?.value, field = f.field?.value, nv = f.new_value?.value;
+  if (reason === 'HANDLER_CONFIRMED' && nv && typeof nv === 'object') {
+    const own = nv.confirmation_channel !== 'SAME_DEVICE';
+    return <div>{own ? '✔' : '⚠'} {t(own ? 'chip.BOTH_PARTIES_CONFIRMED' : 'chip.SAME_DEVICE_CONFIRMED')}: <b>{field}</b> (#{f.corrects_seq?.value})</div>;
+  }
+  if (reason === 'HANDLER_REJECTED') return <div>✖ {t('confirm.rejected')} (#{f.corrects_seq?.value})</div>;
+  return <div>#{f.corrects_seq?.value} <b>{field}</b> → {typeof nv === 'object' ? JSON.stringify(nv) : String(nv)} · {reason}</div>;
 }
 
 function chipKey(c: any): string {

@@ -29,7 +29,7 @@ a { color: var(--oae-insufficient); }
 .top button, .top a { color: #fff; background: transparent; border: 1px solid rgba(255,255,255,.35); border-radius: 8px;
   min-height: 40px; min-width: 48px; padding: 0 10px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .back { border: 0 !important; font-size: 22px; }
-main { flex: 1; padding: 16px; }
+main { flex: 1; padding: 16px; min-width: 0; overflow-wrap: anywhere; }
 h2 { color: var(--oae-green); font-size: 20px; margin: 8px 0 12px; }
 .muted { color: var(--oae-muted); }
 .small { font-size: 14px; }
@@ -90,7 +90,7 @@ textarea { min-height: 96px; }
 .chip.none { color: var(--oae-muted); }
 
 .timeline { list-style: none; padding: 0; margin: 0; border-left: 3px solid var(--line); }
-.timeline li { position: relative; padding: 0 0 16px 16px; }
+.timeline li { position: relative; padding: 0 0 16px 16px; min-width: 0; overflow-wrap: anywhere; }
 .timeline li::before { content: ""; position: absolute; left: -9px; top: 4px; width: 14px; height: 14px; border-radius: 50%;
   background: var(--oae-navy); border: 2px solid var(--oae-bg); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
