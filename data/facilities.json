@@ -1,0 +1,36 @@
+{
+  "REC-01": {
+    "rated_t_per_hr": 4,
+    "hours_per_day": 20,
+    "operating_days": 330,
+    "licensed_t_per_yr": 26400,
+    "lat": null,
+    "lon": null,
+    "source_ids": [
+      "cpcb-capacity-guideline"
+    ]
+  },
+  "REC-02": {
+    "rated_t_per_hr": 1,
+    "hours_per_day": 16,
+    "operating_days": 300,
+    "licensed_t_per_yr": 4800,
+    "lat": null,
+    "lon": null,
+    "source_ids": [
+      "cpcb-capacity-guideline"
+    ]
+  },
+  "REC-03": {
+    "rated_t_per_hr": 2,
+    "hours_per_day": 16,
+    "operating_days": 300,
+    "licensed_t_per_yr": 9600,
+    "lat": 28.73,
+    "lon": 77.78,
+    "source_ids": [
+      "cpcb-capacity-guideline",
+      "hapur-plant-coordinates"
+    ]
+  }
+}

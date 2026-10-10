@@ -1,0 +1,28 @@
+{
+  "claim_id": "C-106",
+  "recycler_party_id": "REC-02",
+  "product": "EWASTE_PHONE",
+  "period_start": "2026-07-01T00:00:00+05:30",
+  "period_end": "2026-09-30T23:59:59+05:30",
+  "input_t": 0.0062,
+  "processed_t": 0.0062,
+  "output": {
+    "COPPER": 0.001
+  },
+  "batch_ids": [
+    "P-0101",
+    "P-0102",
+    "P-0103"
+  ],
+  "evidence_ids": [
+    "EV-0101-PHOTO",
+    "EV-0102-PHOTO",
+    "EV-0103-PHOTO"
+  ],
+  "opening_stock_t": 0.0,
+  "closing_stock_t": 0.0,
+  "documented_losses_t": 0.0,
+  "electricity_kwh": 1,
+  "diesel_generator_logged": false,
+  "submitted_at": "2026-10-07T09:30:00+05:30"
+}

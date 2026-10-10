@@ -1,0 +1,20 @@
+{
+  "claim_id": "C-108",
+  "recycler_party_id": "REC-02",
+  "product": "EWASTE_PHONE",
+  "period_start": "2026-09-01T00:00:00+05:30",
+  "period_end": "2026-09-30T23:59:59+05:30",
+  "input_t": 0.02,
+  "processed_t": 0.02,
+  "output": {},
+  "batch_ids": [],
+  "evidence_ids": [
+    "EV-C108-PHOTO"
+  ],
+  "opening_stock_t": null,
+  "closing_stock_t": null,
+  "documented_losses_t": null,
+  "electricity_kwh": null,
+  "diesel_generator_logged": false,
+  "submitted_at": "2026-10-07T09:35:00+05:30"
+}
