@@ -116,12 +116,13 @@ try {
   await p.locator('#note').fill('e2e: please send the weighbridge slips');
   await p.getByRole('button', { name: 'Request evidence' }).click();
   await p.locator('.trail li').first().waitFor();
-  ok((await p.locator('.trail li').first().innerText()).includes('Requested evidence'), 'auditor action appears first in the trail');
+  await p.waitForFunction(() => document.querySelector('.trail li')?.textContent?.includes('weighbridge slips'));
+  ok(true, 'auditor action with its note appears first in the trail');
   await p.getByLabel('Role').selectOption('REC-01');
   await p.locator('#resp').waitFor();
   await p.locator('#resp').fill('e2e: slips attached');
   await p.getByRole('button', { name: 'Send response' }).click();
-  await p.waitForFunction(() => document.querySelector('.trail li')?.textContent?.includes('Recycler response'));
+  await p.waitForFunction(() => document.querySelector('.trail li')?.textContent?.includes('slips attached'));
   ok(true, 'recycler response is first in the trail (newest first)');
   await p.getByLabel('Role').selectOption('AUD-01');
 
