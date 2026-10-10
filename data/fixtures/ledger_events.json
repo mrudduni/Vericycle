@@ -16,18 +16,18 @@
               "value": 4,
               "unit": null,
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [],
-              "confirmation_channel": "NONE",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
               "basis": "STATED"
             },
             "weight_kg": {
               "value": 120,
               "unit": "kg",
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [
-                "HANDLER"
-              ],
-              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
               "basis": "STATED"
             },
             "source_category": {
@@ -190,18 +190,18 @@
               "value": 4,
               "unit": null,
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [],
-              "confirmation_channel": "NONE",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "SAME_DEVICE",
               "basis": "STATED"
             },
             "weight_kg": {
               "value": 120,
               "unit": "kg",
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [
-                "HANDLER"
-              ],
-              "confirmation_channel": "SAME_DEVICE",
+              "confirmed_by_roles": [],
+              "confirmation_channel": "NONE",
               "basis": "STATED"
             },
             "source_category": {
@@ -258,8 +258,10 @@
               "value": 4,
               "unit": null,
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [],
-              "confirmation_channel": "NONE",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_LINK",
               "basis": "STATED"
             },
             "weight_kg": {
@@ -409,8 +411,10 @@
               "value": 12,
               "unit": null,
               "asserted_by_role": "COLLECTOR",
-              "confirmed_by_roles": [],
-              "confirmation_channel": "NONE",
+              "confirmed_by_roles": [
+                "HANDLER"
+              ],
+              "confirmation_channel": "OWN_DEVICE_WHATSAPP",
               "basis": "STATED"
             },
             "weight_kg": {

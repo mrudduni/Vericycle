@@ -33,7 +33,10 @@ def load_facilities(path: Path | str | None = None) -> dict[str, Facility]:
 
 
 def load_claim(path: Path | str) -> Claim:
-    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    return claim_from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+
+
+def claim_from_dict(raw: dict) -> Claim:
     return Claim(
         claim_id=raw["claim_id"],
         recycler_party_id=raw["recycler_party_id"],
@@ -54,6 +57,65 @@ def load_claim(path: Path | str) -> Claim:
     )
 
 
+def claim_to_dict(c: Claim) -> dict:
+    return {
+        "claim_id": c.claim_id,
+        "recycler_party_id": c.recycler_party_id,
+        "product": c.product.value,
+        "period_start": c.period_start.isoformat(),
+        "period_end": c.period_end.isoformat(),
+        "input_t": c.input_t,
+        "processed_t": c.processed_t,
+        "output": dict(c.output),
+        "batch_ids": list(c.batch_ids),
+        "evidence_ids": list(c.evidence_ids),
+        "opening_stock_t": c.opening_stock_t,
+        "closing_stock_t": c.closing_stock_t,
+        "documented_losses_t": c.documented_losses_t,
+        "electricity_kwh": c.electricity_kwh,
+        "diesel_generator_logged": c.diesel_generator_logged,
+        "submitted_at": c.submitted_at.isoformat() if c.submitted_at else None,
+    }
+
+
+def evidence_from_dict(eid: str, e: dict) -> Evidence:
+    exif = dict(e.get("exif", {}))
+    if isinstance(exif.get("DateTimeOriginal"), str):
+        exif["DateTimeOriginal"] = datetime.fromisoformat(exif["DateTimeOriginal"])
+    extracted = dict(e.get("extracted", {}))
+    if isinstance(extracted.get("date"), str):
+        extracted["date"] = date.fromisoformat(extracted["date"])
+    return Evidence(
+        evidence_id=eid,
+        kind=EvidenceKind(e["kind"]),
+        s3_key=e.get("s3_key", ""),
+        sha256=e.get("sha256", ""),
+        received_at_server=datetime.fromisoformat(e["received_at_server"])
+        if e.get("received_at_server")
+        else datetime.now(),
+        phash=e.get("phash"),
+        exif=exif,
+        extracted=extracted,
+        batch_id=e.get("batch_id"),
+    )
+
+
+def evidence_to_dict(e: Evidence) -> dict:
+    exif = {k: (v.isoformat() if isinstance(v, datetime) else v) for k, v in e.exif.items()}
+    extracted = {k: (v.isoformat() if isinstance(v, (date, datetime)) else v) for k, v in e.extracted.items()}
+    return {
+        "evidence_id": e.evidence_id,
+        "kind": e.kind.value,
+        "s3_key": e.s3_key,
+        "sha256": e.sha256,
+        "phash": e.phash,
+        "exif": exif,
+        "extracted": extracted,
+        "received_at_server": e.received_at_server.isoformat(),
+        "batch_id": e.batch_id,
+    }
+
+
 def load_claims_dir(path: Path | str | None = None) -> list[Claim]:
     p = Path(path) if path else DATA_DIR / "claims"
     return [load_claim(f) for f in sorted(p.glob("*.json"))]
@@ -62,25 +124,17 @@ def load_claims_dir(path: Path | str | None = None) -> list[Claim]:
 def load_evidence_index(path: Path | str | None = None) -> dict[str, Evidence]:
     p = Path(path) if path else DATA_DIR / "evidence" / "evidence_index.json"
     raw = json.loads(p.read_text(encoding="utf-8"))
-    out = {}
-    for eid, e in raw.items():
-        exif = dict(e.get("exif", {}))
-        if "DateTimeOriginal" in exif and exif["DateTimeOriginal"] is not None:
-            exif["DateTimeOriginal"] = datetime.fromisoformat(exif["DateTimeOriginal"])
-        extracted = dict(e.get("extracted", {}))
-        if "date" in extracted and extracted["date"] is not None:
-            extracted["date"] = date.fromisoformat(extracted["date"])
-        out[eid] = Evidence(
-            evidence_id=eid,
-            kind=EvidenceKind(e["kind"]),
-            s3_key=e.get("s3_key", ""),
-            sha256=e.get("sha256", ""),
-            received_at_server=datetime.fromisoformat(e["received_at_server"])
-            if e.get("received_at_server")
-            else datetime.now(),
-            phash=e.get("phash"),
-            exif=exif,
-            extracted=extracted,
-            batch_id=e.get("batch_id"),
-        )
-    return out
+    return {eid: evidence_from_dict(eid, e) for eid, e in raw.items()}
+
+
+def facility_from_dict(party_id: str, f: dict) -> Facility:
+    return Facility(
+        recycler_party_id=party_id,
+        rated_t_per_hr=f.get("rated_t_per_hr"),
+        hours_per_day=f.get("hours_per_day"),
+        operating_days=f.get("operating_days"),
+        licensed_t_per_yr=f.get("licensed_t_per_yr"),
+        lat=f.get("lat"),
+        lon=f.get("lon"),
+        source_ids=tuple(f.get("source_ids", [])),
+    )

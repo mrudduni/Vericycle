@@ -85,7 +85,7 @@ def field(value, role, confirmed=(), channel="NONE", basis="STATED", unit=None):
 
 
 def handover(seq, at, actor, counterparty, count, weight_kg, source_category,
-             confirmed=(), channel="NONE"):
+             confirmed=(), channel="NONE", confirm_weight=False):
     return {
         "seq": seq,
         "type": "HANDOVER",
@@ -95,8 +95,9 @@ def handover(seq, at, actor, counterparty, count, weight_kg, source_category,
         "actor_party_id": actor,
         "counterparty_party_id": counterparty,
         "fields": {
-            "count": field(count, "COLLECTOR"),
-            "weight_kg": field(weight_kg, "COLLECTOR", confirmed, channel, unit="kg"),
+            "count": field(count, "COLLECTOR", confirmed, channel),
+            "weight_kg": field(weight_kg, "COLLECTOR", confirmed if confirm_weight else (),
+                               channel if confirm_weight else "NONE", unit="kg"),
             "source_category": field(source_category, "COLLECTOR", confirmed, channel),
         },
         "evidence_ids": [],
@@ -197,7 +198,7 @@ LEDGER_BATCHES = {
         "material": "BATTERY_LEAD_ACID",
         "events": [
             handover(1, "2026-10-05T12:00:00", "COL-118", "HND-91aa07", 4, 120,
-                      "DRIVER", confirmed=["HANDLER"], channel="OWN_DEVICE_LINK"),
+                      "DRIVER", confirmed=["HANDLER"], channel="OWN_DEVICE_LINK", confirm_weight=True),
             transfer(2, "2026-10-06T09:00:00", "COL-118", 119),
             split(3, "2026-10-06T09:30:00", "AGG-01", {"B-0046.1": 60, "B-0046.2": 58}),
         ],
@@ -214,7 +215,8 @@ LEDGER_BATCHES = {
         "material": "EWASTE_PHONE",
         "events": [
             {**handover(1, "2026-07-14T13:00:00", "COL-207", "HND-5d3e12", 12, 2.1,
-                         "RETAIL_EXCHANGE", confirmed=["HANDLER"], channel="OWN_DEVICE_WHATSAPP"),
+                         "RETAIL_EXCHANGE", confirmed=["HANDLER"], channel="OWN_DEVICE_WHATSAPP",
+                         confirm_weight=True),
              "material": "EWASTE_PHONE"},
             {**transfer(2, "2026-07-16T10:00:00", "COL-207", 2.08), "material": "EWASTE_PHONE"},
             {**intake(3, "2026-07-18T10:00:00", "REC-02", 2.05, material="EWASTE_PHONE"),
