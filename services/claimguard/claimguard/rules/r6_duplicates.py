@@ -14,7 +14,10 @@ from ..model import Claim, EvidenceKind, RuleOutcome, RuleResult, Severity
 
 RULE_ID = "R6"
 RULE_VERSION = "1.0.0"
-PHASH_HAMMING_THRESHOLD = 6  # out of 64 bits for a typical 8x8 perceptual hash
+# Out of 64 bits. A JPEG re-encode or mild resize moves a difference hash by 0-2 bits (measured, tests/claimguard/test_evidence.py),
+# while two different photos of the same yard can land within ~6, so the threshold stays strict. Real-yard calibration is still
+# an open question (SOLUTION.md section 20); R6 is SOFT for that reason.
+PHASH_HAMMING_THRESHOLD = 3
 
 
 def _hamming(a: str, b: str) -> int:

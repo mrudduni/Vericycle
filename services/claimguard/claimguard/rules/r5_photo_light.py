@@ -100,7 +100,7 @@ def _evaluate_one(claim: Claim, evidence: Evidence) -> RuleResult:
         )
 
     elevation = solar_elevation_deg(aware_dt, lat, lon)
-    light_class = exif.get("_demo_light_class", "UNCLEAR")  # set by generate_sample_data.py
+    light_class = exif.get("light_class") or exif.get("_demo_light_class", "UNCLEAR")  # light_class: evidence processor; _demo_...: fixtures
     ist_note = " (IST assumed, no offset in EXIF)" if assumed_ist else ""
     formula = (
         f"sun elevation {elevation:.1f} deg at {aware_dt.isoformat()}{ist_note}, "

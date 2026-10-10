@@ -6,6 +6,8 @@ import * as apigwi from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwa from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cw from 'aws-cdk-lib/aws-cloudwatch';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
@@ -80,7 +82,7 @@ export class ClaimsStack extends Stack {
     const deps = new lambda.LayerVersion(this, 'Deps', {
       code: lambda.Code.fromAsset(path.join(ROOT, '.build/claimguard/deps')),
       compatibleRuntimes: [lambda.Runtime.PYTHON_3_12], compatibleArchitectures: [lambda.Architecture.ARM_64],
-      description: 'pyyaml (arm64)',
+      description: 'pyyaml, pillow (arm64)',
     });
     const logGroup = new logs.LogGroup(this, 'ReviewApiLogs', {
       logGroupName: `/aws/lambda/oae-${stage}-review-api`, retention: logs.RetentionDays.ONE_MONTH, removalPolicy: RemovalPolicy.DESTROY,
@@ -127,6 +129,48 @@ export class ClaimsStack extends Stack {
       comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
     });
 
+    // --- Evidence processor: photo/slip/invoice uploaded -> EXIF, hashes, light class, Textract -> EV# item ---------
+    const evLogs = new logs.LogGroup(this, 'EvidenceLogs', {
+      logGroupName: `/aws/lambda/oae-${stage}-evidence-processor`, retention: logs.RetentionDays.ONE_MONTH, removalPolicy: RemovalPolicy.DESTROY,
+    });
+    const evFn = new lambda.Function(this, 'EvidenceProcessor', {
+      functionName: `oae-${stage}-evidence-processor`,
+      runtime: lambda.Runtime.PYTHON_3_12, architecture: lambda.Architecture.ARM_64,
+      handler: 'evidence.handler.handler',
+      code: lambda.Code.fromAsset(path.join(ROOT, '.build/claimguard/app')),
+      layers: [powertools, deps],
+      timeout: Duration.seconds(60), memorySize: 1024, tracing: lambda.Tracing.ACTIVE, logGroup: evLogs,
+      environment: { STAGE: stage, CLAIMS_TABLE: table.tableName, POWERTOOLS_SERVICE_NAME: 'claimguard-evidence' },
+    });
+    nag(evFn, 'AwsSolutions::AwsSolutions-L1', 'CONTRACT §2 fixes Python 3.12 for both apps.');
+    table.grantReadWriteData(evFn);
+    dataKey.grantEncryptDecrypt(evFn);
+    evidenceBucket.grantRead(evFn);
+    evFn.addToRolePolicy(new iam.PolicyStatement({ actions: ['textract:AnalyzeExpense'], resources: ['*'] }));
+    const watched: [string, string][] = [['ClaimEvidenceCreated', evidenceBucket.bucketName]];
+    if (live) {
+      // ChainTrack's capture bucket: weigh slips and photos uploaded at intake (only evidence/, never qr/ audio/ transcripts/).
+      const capBucket = ssm.StringParameter.valueForStringParameter(this, `/openaeye/${ledgerStage}/capture/evidence-bucket`);
+      watched.push(['CaptureEvidenceCreated', capBucket]);
+      evFn.addToRolePolicy(new iam.PolicyStatement({ actions: ['s3:GetObject'], resources: [`arn:aws:s3:::${capBucket}/evidence/*`] }));
+      evFn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['kms:Decrypt'], resources: ['*'],
+        conditions: { StringEquals: { 'kms:ViaService': `s3.${this.region}.amazonaws.com` } },
+      }));
+    }
+    for (const [id, bucket] of watched) {
+      new events.Rule(this, id, {
+        ruleName: `oae-${stage}-${id}`,
+        eventPattern: { source: ['aws.s3'], detailType: ['Object Created'],
+          detail: { bucket: { name: [bucket] }, object: { key: [{ prefix: 'evidence/' }] } } },
+        targets: [new targets.LambdaFunction(evFn, { retryAttempts: 2 })],
+      });
+    }
+    new cw.Alarm(this, 'EvidenceErrors', {
+      alarmName: `oae-${stage}-evidence-errors`, metric: evFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 3, evaluationPeriods: 1, treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    });
     // --- HTTP API ---------------------------------------------------------------------------------
     const apiLogs = new logs.LogGroup(this, 'ApiAccessLogs', {
       logGroupName: `/aws/apigateway/oae-${stage}-review`, retention: logs.RetentionDays.ONE_MONTH, removalPolicy: RemovalPolicy.DESTROY,
