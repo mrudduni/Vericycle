@@ -10,6 +10,9 @@ import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cw from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwa from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwi from 'aws-cdk-lib/aws-apigatewayv2-integrations';
@@ -25,6 +28,7 @@ export interface CaptureStackProps extends StackProps, StageProps {
   bedrockRegion: string;
   waNumber: string;         // digits only, or "" until the WhatsApp number is linked
   waPhoneNumberId: string;  // EUMS phone-number-id ARN; "" = WhatsApp resources not deployed
+  alarmEmail: string;       // "" = alarms go to the SNS topic only
 }
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -50,6 +54,30 @@ export class CaptureStack extends Stack {
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
       removalPolicy: stage === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     });
+
+    // --- failure handling: one DLQ for every asynchronous path, alarms to one topic ----------
+    const dlq = new sqs.Queue(this, 'Dlq', {
+      queueName: `oae-${stage}-chaintrack-dlq`, retentionPeriod: Duration.days(14),
+      // SSE-SQS: EventBridge, SNS and Scheduler can deliver to it without key-policy changes.
+      encryption: sqs.QueueEncryption.SQS_MANAGED, enforceSSL: true,
+    });
+    nag(dlq, 'AwsSolutions::AwsSolutions-SQS3', 'This queue is the dead-letter queue.');
+    const alarmTopic = new sns.Topic(this, 'Alarms', { topicName: `oae-${stage}-chaintrack-alarms`, masterKey: core.dataKey, enforceSSL: true });
+    // CloudWatch must be able to use the topic's key to publish alarms.
+    core.dataKey.addToResourcePolicy(new iam.PolicyStatement({
+      principals: [new iam.ServicePrincipal('cloudwatch.amazonaws.com')],
+      actions: ['kms:GenerateDataKey*', 'kms:Decrypt'], resources: ['*'],
+      conditions: { StringEquals: { 'aws:SourceAccount': this.account } },
+    }));
+    if (props.alarmEmail) new sns.Subscription(this, 'AlarmEmail', { topic: alarmTopic, protocol: sns.SubscriptionProtocol.EMAIL, endpoint: props.alarmEmail });
+    const alarm = (id: string, metric: cw.IMetric, threshold: number, what: string) => {
+      const a = new cw.Alarm(this, id, {
+        alarmName: `oae-${stage}-${id}`, alarmDescription: what, metric, threshold, evaluationPeriods: 1,
+        comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      });
+      a.addAlarmAction(new cwa.SnsAction(alarmTopic));
+    };
 
     const powertools = lambda.LayerVersion.fromLayerVersionArn(this, 'Powertools',
       ssm.StringParameter.valueForStringParameter(this, '/aws/service/powertools/python/arm64/python3.12/latest'));
@@ -91,6 +119,8 @@ export class CaptureStack extends Stack {
         tracing: lambda.Tracing.ACTIVE, logGroup,
       });
       nag(f, 'AwsSolutions::AwsSolutions-L1', 'CONTRACT §2 fixes Python 3.12 for both apps.');
+      alarm(`${name}-errors`, f.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }), 3,
+        `${name} raised 3 or more errors in 5 minutes`);
       return f;
     };
 
@@ -148,7 +178,7 @@ export class CaptureStack extends Stack {
       }));
       core.dataKey.grantEncryptDecrypt(new iam.ServicePrincipal('social-messaging.amazonaws.com'));
       const wa = fn('whatsapp-ingest', 'ingest.handler.handler', 60);
-      topic.addSubscription(new subs.LambdaSubscription(wa));
+      topic.addSubscription(new subs.LambdaSubscription(wa, { deadLetterQueue: dlq }));
       for (const f of [wa, transcribeDone]) {
         f.addToRolePolicy(new iam.PolicyStatement({
           actions: ['social-messaging:SendWhatsAppMessage', 'social-messaging:GetWhatsAppMessageMedia'],
@@ -179,17 +209,19 @@ export class CaptureStack extends Stack {
         source: ['aws.transcribe'], detailType: ['Transcribe Job State Change'],
         detail: { TranscriptionJobName: [{ prefix: `oae-${stage}-` }], TranscriptionJobStatus: ['COMPLETED', 'FAILED'] },
       },
-      targets: [new targets.LambdaFunction(transcribeDone, { retryAttempts: 2 })],
+      targets: [new targets.LambdaFunction(transcribeDone, { retryAttempts: 2, deadLetterQueue: dlq })],
     });
 
     // --- Nightly digest at 00:15 IST ----------------------------------------------------------
     const schedRole = new iam.Role(this, 'DigestScheduleRole', { assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com') });
     digest.grantInvoke(schedRole);
+    dlq.grantSendMessages(schedRole);
     new scheduler.CfnSchedule(this, 'NightlyDigest', {
       name: `oae-${stage}-nightly-digest`,
       scheduleExpression: 'cron(15 0 * * ? *)', scheduleExpressionTimezone: 'Asia/Kolkata',
       flexibleTimeWindow: { mode: 'OFF' },
-      target: { arn: digest.functionArn, roleArn: schedRole.roleArn, input: '{}' },
+      target: { arn: digest.functionArn, roleArn: schedRole.roleArn, input: '{}',
+        retryPolicy: { maximumRetryAttempts: 3 }, deadLetterConfig: { arn: dlq.queueArn } },
     });
 
     // --- HTTP API -----------------------------------------------------------------------------
@@ -239,6 +271,12 @@ export class CaptureStack extends Stack {
       }
     }
     this.apiUrl = http.apiEndpoint + '/';
+
+    alarm('api-5xx', new cw.Metric({ namespace: 'AWS/ApiGateway', metricName: '5xx', dimensionsMap: { ApiId: http.apiId },
+      statistic: 'Sum', period: Duration.minutes(5) }), 5, 'Capture API returned 5 or more 5xx responses in 5 minutes');
+    alarm('dlq-not-empty', dlq.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5), statistic: 'Maximum' }), 1,
+      'A transcription, digest or WhatsApp message failed after retries (see the DLQ)');
+    new CfnOutput(this, 'AlarmTopicArn', { value: alarmTopic.topicArn });
 
     // --- documented cdk-nag acknowledgements for wildcard grants ---------------------------------
     const coreName = core.stackName;

@@ -3,6 +3,7 @@
   "context": {
     "stage": "shaurya",
     "webOrigins": "http://localhost:5173",
-    "digestRetentionDays": 1
+    "digestRetentionDays": 1,
+    "@aws-cdk/core:defaultCrossStackReferences": "strong"
   }
 }
