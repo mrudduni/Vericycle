@@ -1,7 +1,7 @@
 import { load, save } from './store';
 
 export type Role = 'COLLECTOR' | 'AGGREGATOR' | 'RECYCLER' | 'AUDITOR' | 'PRODUCER';
-export interface Session { party_id: string; role: Role; token?: string; label: string }
+export interface Session { party_id: string; role: Role; label: string; cognito?: boolean }
 
 // Demo accounts (CONTRACT §8). Real sign-in (Cognito) replaces the picker once the method is chosen.
 export const DEMO_PARTIES: Session[] = [

@@ -1,17 +1,21 @@
 import { getSession } from './session';
 import { ulid } from './ids';
+import { idToken } from './auth';
 
 export const API = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:8787';
-const DEV_AUTH = (import.meta.env.VITE_DEV_AUTH ?? '1') === '1';
+const DEV_AUTH = (import.meta.env.VITE_DEV_AUTH ?? '1') === '1' && !import.meta.env.VITE_USER_POOL_ID;
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
 }
 
-function authHeaders(): Record<string, string> {
+async function authHeaders(): Promise<Record<string, string>> {
   const s = getSession();
   if (!s) return {};
-  if (s.token) return { authorization: `Bearer ${s.token}` };
+  if (s.cognito) {
+    const tok = await idToken().catch(() => null);
+    return tok ? { authorization: `Bearer ${tok}` } : {};
+  }
   return DEV_AUTH ? { 'x-dev-party': s.party_id, 'x-dev-role': s.role } : {};
 }
 
@@ -26,14 +30,14 @@ async function parse(res: Response): Promise<any> {
 }
 
 export async function get<T = any>(path: string): Promise<T> {
-  return parse(await fetch(API + path, { headers: authHeaders() }));
+  return parse(await fetch(API + path, { headers: await authHeaders() }));
 }
 
 /** POST with an Idempotency-Key. Pass the key in to retry the same logical request safely. */
 export async function post<T = any>(path: string, body: unknown, key: string = ulid()): Promise<T> {
   return parse(await fetch(API + path, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'idempotency-key': key, ...authHeaders() },
+    headers: { 'content-type': 'application/json', 'idempotency-key': key, ...(await authHeaders()) },
     body: JSON.stringify(body),
   }));
 }

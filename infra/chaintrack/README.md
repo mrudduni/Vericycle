@@ -24,6 +24,7 @@ WEB=$(aws ssm get-parameter --name /openaeye/shaurya/capture/web-url --query Par
 npx cdk deploy -c stage=shaurya -c webUrl=$WEB -c webOrigins=$WEB,http://localhost:5173 \
   -c modelId=<model or profile id | offline> OAE-Shaurya-Capture
 cd ../.. && python scripts/chaintrack/seed_demo.py --stage shaurya
+python scripts/chaintrack/create_demo_users.py --stage shaurya   # usernames col-118, agg-01, rec-01…; passwords → ~/.openaeye_demo_users_shaurya.txt
 bash scripts/chaintrack/deploy_web.sh shaurya
 ```
 

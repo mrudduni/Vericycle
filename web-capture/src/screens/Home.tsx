@@ -1,10 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEMO_PARTIES, getSession, setSession } from '../lib/session';
+import { COGNITO } from '../lib/auth';
 import { Link } from '../components/ui';
+
+const SignIn = lazy(() => import('./SignIn'));
 
 export default function Home() {
   const { t } = useTranslation();
   const s = getSession();
+  if (!s && COGNITO) {
+    return (
+      <main>
+        <h2>{t('signIn')}</h2>
+        <Suspense fallback={<p className="muted">…</p>}><SignIn /></Suspense>
+        <p style={{ marginTop: 24 }}><Link to="/privacy">{t('home.privacy')}</Link></p>
+      </main>
+    );
+  }
   if (!s) {
     return (
       <main>

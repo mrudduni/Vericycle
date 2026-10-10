@@ -102,3 +102,17 @@ textarea { min-height: 96px; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
 video, canvas, .photo { width: 100%; border-radius: var(--oae-radius); background: #000; }
 @media print { .top, .no-print { display: none !important; } }
+
+/* Amplify UI sign-in uses the team tokens */
+[data-amplify-authenticator] {
+  --amplify-colors-brand-primary-10: var(--oae-callout);
+  --amplify-colors-brand-primary-80: var(--oae-navy);
+  --amplify-colors-brand-primary-90: var(--oae-navy-ink);
+  --amplify-colors-brand-primary-100: var(--oae-navy-ink);
+  --amplify-components-authenticator-router-border-color: var(--line);
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-fieldcontrol-font-size: 16px;
+  --amplify-components-button-min-height: 48px;
+  --amplify-fonts-default-variable: var(--oae-font);
+  --amplify-fonts-default-static: var(--oae-font);
+}

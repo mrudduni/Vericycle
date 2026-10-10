@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { match, navigate, usePath } from './lib/router';
 import { getSession, setSession } from './lib/session';
 import { setLang } from './i18n';
+import { signOutCognito } from './lib/auth';
 import { QueueBanner } from './components/ui';
 import Home from './screens/Home';
 import Chat from './screens/Chat';
@@ -43,7 +44,7 @@ export default function App() {
         {path !== '/' && !path.startsWith('/c/') && <button className="back" aria-label="Back" onClick={() => (history.length > 1 ? history.back() : navigate('/'))}>←</button>}
         <h1>{title}</h1>
         {!path.startsWith('/c/') && <button onClick={() => setLang(i18n.language === 'hi' ? 'en' : 'hi')}>{t('lang')}</button>}
-        {s && !isPublic && <button onClick={() => { setSession(null); navigate('/'); }}>{t('signOut')}</button>}
+        {s && !isPublic && <button onClick={() => { void signOutCognito().finally(() => { setSession(null); navigate('/'); }); }}>{t('signOut')}</button>}
       </header>
       {!isPublic && <QueueBanner />}
       {screen}
