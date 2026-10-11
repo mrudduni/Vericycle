@@ -4,8 +4,8 @@
   "description": "Record handovers of batteries, phones and ACs.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#17324d",
+  "background_color": "#f6f3ec",
+  "theme_color": "#1d5a42",
   "lang": "hi",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }

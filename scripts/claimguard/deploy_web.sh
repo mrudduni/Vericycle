@@ -13,7 +13,10 @@ cd "$ROOT/web-review"
 if [ -n "$AUTH_STAGE" ]; then
   POOL=$(aws_ ssm get-parameter --name "/openaeye/$AUTH_STAGE/auth/user-pool-id" --query Parameter.Value --output text)
   CLIENT=$(aws_ ssm get-parameter --name "/openaeye/$AUTH_STAGE/auth/user-pool-client-id-review" --query Parameter.Value --output text)
-  VITE_API_URL="$API_URL" VITE_USER_POOL_ID="$POOL" VITE_USER_POOL_CLIENT_ID="$CLIENT" VITE_DEV_AUTH=0 npm run build
+  # Landing page: links to the capture PWA and runs live chain checks against the capture API (needs the review origin in its CORS list).
+  CAP_WEB=$(aws_ ssm get-parameter --name "/openaeye/$AUTH_STAGE/capture/web-url" --query Parameter.Value --output text 2>/dev/null || true)
+  CAP_API=$(aws_ ssm get-parameter --name "/openaeye/$AUTH_STAGE/capture/api-url" --query Parameter.Value --output text 2>/dev/null || true)
+  VITE_API_URL="$API_URL" VITE_USER_POOL_ID="$POOL" VITE_USER_POOL_CLIENT_ID="$CLIENT" VITE_CAPTURE_WEB_URL="$CAP_WEB" VITE_CAPTURE_API_URL="$CAP_API" VITE_DEV_AUTH=0 npm run build
 else
   VITE_API_URL="$API_URL" VITE_DEV_AUTH=1 npm run build
 fi

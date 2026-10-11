@@ -4,6 +4,7 @@ import { get } from '../lib/api';
 import { getSession, type Role } from '../lib/session';
 import { Chip, ErrorText, Link, useAsync } from '../components/ui';
 import { navigate } from '../lib/router';
+import { Icon } from '../components/Icon';
 
 const ACTIONS: Record<Role, string[]> = {
   COLLECTOR: ['TRANSFER', 'CORRECTION'],
@@ -32,13 +33,16 @@ export default function Batch({ id }: { id: string }) {
   const closed = ['SPLIT', 'MERGED'].includes(data.status);
   return (
     <main>
-      <h2>{t('batch.title')} {data.batch_id}</h2>
+      <div className="batch-head">
+      <span className="eyebrow">{t('batch.title')}</span>
+      <div className="id">{data.batch_id}</div>
       <dl className="kv">
         <dt>{t('chat.material')}</dt><dd>{t(`mat.${data.material}`)}</dd>
         <dt>{t('batch.status')}</dt><dd>{data.status}</dd>
         {data.parent_batch_ids?.length > 0 && <><dt>←</dt><dd>{data.parent_batch_ids.map((p: string) => <Link key={p} to={`/b/${p}`}>{p} </Link>)}</dd></>}
         {data.child_batch_ids?.length > 0 && <><dt>→</dt><dd>{data.child_batch_ids.map((c: string) => <Link key={c} to={`/b/${c}`}>{c} </Link>)}</dd></>}
       </dl>
+      </div>
       {data.anomalies?.length > 0 && (
         <div className="callout" role="note" style={{ borderColor: 'var(--oae-flag-soft)', marginTop: 12 }}>
           {data.anomalies.map((a: any, i: number) => (
@@ -50,13 +54,15 @@ export default function Batch({ id }: { id: string }) {
       <ol className="timeline">
         {data.view.map((ev: any) => (
           <li key={ev.seq}>
-            <div style={{ fontWeight: 700 }}>{ev.seq}. {t(`type.${ev.type}`)} <span className="muted small">{ev.at_server?.slice(0, 16).replace('T', ' ')}</span></div>
+            <div style={{ fontWeight: 700 }}>{ev.seq}. {t(`type.${ev.type}`)} <span className="muted small" style={{ fontWeight: 450 }}>{ev.at_server?.slice(0, 16).replace('T', ' ')}</span></div>
+            <div className="evt">
             {ev.confirmation && <div style={{ margin: '4px 0' }}><Chip status={ev.confirmation.chip ? chipKey(ev.confirmation) : ev.confirmation.status} /></div>}
             <div className="small">
               {ev.type === 'CORRECTION' ? <CorrectionLine f={ev.fields} /> :
                 Object.entries(ev.fields).map(([k, fv]: any) => <div key={k}><span className="muted">{k}:</span> {fieldText(k, fv, t)}</div>)}
             </div>
-            <div className="small muted">{ev.evidence_badge === 'EVIDENCE_ATTACHED' ? '📎 ' + t('batch.evidence') : '○ ' + t('batch.noEvidence')}</div>
+            <div className="small muted" style={{ marginTop: 6 }}>{ev.evidence_badge === 'EVIDENCE_ATTACHED' ? '📎 ' + t('batch.evidence') : '○ ' + t('batch.noEvidence')}</div>
+            </div>
           </li>
         ))}
       </ol>
@@ -68,7 +74,7 @@ export default function Batch({ id }: { id: string }) {
           </div>
         </>
       )}
-      <p><Link to={`/v/${data.batch_id}`}>🔗 {t('batch.verify')}</Link></p>
+      <p style={{ marginTop: 20 }}><Link className="btn secondary block" to={`/v/${data.batch_id}`}><Icon name="shield" />{t('batch.verify')}</Link></p>
     </main>
   );
 }
@@ -95,9 +101,9 @@ export function OpenBatch() {
   return (
     <main>
       <h2>{t('home.batch')}</h2>
-      <form onSubmit={(e) => { e.preventDefault(); if (v.trim()) navigate(`/b/${v.trim().toUpperCase()}`); }}>
-        <input value={v} onChange={(e) => setV(e.target.value)} placeholder={t('batch.idPlaceholder')} aria-label={t('batch.idPlaceholder')} autoCapitalize="characters" />
-        <p><button className="btn block">{t('batch.open')}</button></p>
+      <form onSubmit={(e) => { e.preventDefault(); if (v.trim()) navigate(`/${getSession() ? 'b' : 'v'}/${v.trim().toUpperCase()}`); }}>
+        <input value={v} onChange={(e) => setV(e.target.value)} placeholder={t('batch.idPlaceholder')} aria-label={t('batch.idPlaceholder')} autoCapitalize="characters" style={{ fontFamily: 'var(--f-mono)', fontSize: 18 }} />
+        <p><button className="btn block"><Icon name="search" />{t('batch.open')}</button></p>
       </form>
     </main>
   );

@@ -33,7 +33,7 @@ export function OutcomeChip({ outcome, severity }: { outcome: Outcome; severity:
 
 export function FlagCounts({ hard, soft }: { hard: number; soft: number }) {
   const t = useT();
-  if (!hard && !soft) return <span className="muted">{t('noFlags')}</span>;
+  if (!hard && !soft) return <span className="chip out pass"><span aria-hidden="true">○</span> {t('noFlags')}</span>;
   return (
     <span className="flagcounts">
       {hard > 0 && <span className="chip out hard"><span aria-hidden="true">▲</span> {hard} HARD</span>}
@@ -100,7 +100,7 @@ function SourceDrawer({ id, pre, onClose }: { id: string; pre?: Source; onClose:
       <aside className="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
         <header>
           <h2 id="drawer-title">{t('source')}</h2>
-          <button ref={closeBtn} className="btn secondary" onClick={onClose}>{t('close')}</button>
+          <button ref={closeBtn} className="btn secondary" style={{ minHeight: 38 }} onClick={onClose}>{t('close')}</button>
         </header>
         {err && <p className="error" role="alert">{err}</p>}
         {!src && !err && <p className="muted">{t('loading')}</p>}

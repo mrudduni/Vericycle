@@ -55,7 +55,9 @@ WEB=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/web-url" --query Pa
 echo "web $WEB" | tee -a "$LOG"
 
 say "7/9 deploy Capture (extraction model: ${MODEL_ID:-offline})"
-run npx cdk deploy -c stage="$STAGE" -c region="$REGION" -c webUrl="$WEB" -c webOrigins="$WEB,http://localhost:5173" \
+# The review dashboard's landing page calls the public verify endpoint, so its origin is allowed too (if it exists yet).
+REV=$(aws ssm get-parameter --name "/openaeye/$STAGE/review/web-url" --query Parameter.Value --output text 2>/dev/null || true)
+run npx cdk deploy -c stage="$STAGE" -c region="$REGION" -c webUrl="$WEB" -c webOrigins="$WEB${REV:+,$REV},http://localhost:5173" \
   -c modelId="${MODEL_ID:-offline}" -c voice="${OAE_VOICE:-on}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} "OAE-$S-Capture" --require-approval never || fail "Capture"
 API=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
 echo "api $API" | tee -a "$LOG"

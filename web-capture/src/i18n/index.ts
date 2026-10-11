@@ -5,7 +5,10 @@ import { load, save } from '../lib/store';
 const en = {
   app: 'ChainTrack', lang: 'हिंदी', signIn: 'Sign in', signOut: 'Exit', chooseAccount: 'Choose a demo account',
   demoNote: 'Demo accounts only. Real sign-in is added once the team picks the method.',
-  home: { chat: 'Record a handover', scan: 'Scan a QR', batch: 'Open a batch', verify: 'Check a record', privacy: 'Privacy' },
+  home: { chat: 'Record a handover', scan: 'Scan a QR', batch: 'Open a batch', verify: 'Check a record', privacy: 'Privacy',
+    hello: 'Namaste', chatSub: 'Type what you bought. We read it back to you.', scanSub: 'Receive a batch', batchSub: 'History and next step',
+    privacySub: 'What we keep', start: 'Start', welcome: 'Proof of every handover', welcomeBody: 'Record what you buy and pass on, in Hindi or English. The seller confirms on their own phone. No names needed.',
+    verifyLink: 'Check a receipt', role: { COLLECTOR: 'Collector', AGGREGATOR: 'Aggregator', RECYCLER: 'Recycler', AUDITOR: 'Auditor', PRODUCER: 'Producer' } },
   chat: {
     hello: 'Namaste! Tell me what you bought: send a voice note or type, e.g. "4 e-rickshaw batteries from a driver, about 120 kg".',
     helloTyped: 'Namaste! Type what you bought, e.g. "4 e-rickshaw batteries from a driver, about 120 kg".',
@@ -38,7 +41,7 @@ const en = {
   confirm: { yes: 'हाँ, मैंने बेचा / Yes, I sold this', no: 'नहीं / No', done: 'Thank you. Recorded.', rejected: 'Recorded that this is not right.',
     used: 'This link was already used.', expired: 'This link has expired.', what: 'Did you sell this?' },
   verify: { title: 'Public check', ok: 'Chain intact: {{checked}} of {{checked}} records check out', bad: 'Chain broken at record {{seq}}',
-    reason: 'Reason', digest: 'Latest published daily root', key: 'Public signing key', explain: 'Every record is hashed into the one before it and signed with a key held in AWS KMS. Changing any stored record breaks the chain at that record.' },
+    again: 'Check again', reason: 'Reason', digest: 'Latest published daily root', key: 'Public signing key', explain: 'Every record is hashed into the one before it and signed with a key held in AWS KMS. Changing any stored record breaks the chain at that record.' },
   chip: { BOTH_PARTIES_CONFIRMED: 'Seller confirmed on own phone', HANDLER_CONFIRMED: 'Seller confirmed on own phone (some fields)',
     SAME_DEVICE_CONFIRMED: "Confirmed on buyer's phone (not independent)", BUYER_REPORTED: 'Entered by buyer only' },
   err: { generic: 'Something went wrong. Please try again.', forbidden: 'You are not allowed to do this.' },
@@ -55,7 +58,10 @@ const en = {
 const hi: typeof en = {
   app: 'चेनट्रैक', lang: 'English', signIn: 'साइन इन', signOut: 'बाहर', chooseAccount: 'डेमो खाता चुनें',
   demoNote: 'सिर्फ़ डेमो खाते। असली साइन-इन टीम का फ़ैसला होने के बाद जुड़ेगा।',
-  home: { chat: 'ख़रीद दर्ज करें', scan: 'QR स्कैन करें', batch: 'बैच खोलें', verify: 'रिकॉर्ड जाँचें', privacy: 'गोपनीयता' },
+  home: { chat: 'ख़रीद दर्ज करें', scan: 'QR स्कैन करें', batch: 'बैच खोलें', verify: 'रिकॉर्ड जाँचें', privacy: 'गोपनीयता',
+    hello: 'नमस्ते', chatSub: 'लिखिए क्या ख़रीदा। हम पढ़कर सुनाएँगे।', scanSub: 'बैच लें', batchSub: 'इतिहास और अगला कदम',
+    privacySub: 'हम क्या रखते हैं', start: 'शुरू करें', welcome: 'हर हैंडओवर का सबूत', welcomeBody: 'जो ख़रीदें और आगे दें, हिंदी या अंग्रेज़ी में दर्ज करें। विक्रेता अपने फ़ोन से पुष्टि करता है। नाम की ज़रूरत नहीं।',
+    verifyLink: 'रसीद जाँचें', role: { COLLECTOR: 'कलेक्टर', AGGREGATOR: 'एग्रीगेटर', RECYCLER: 'रीसाइक्लर', AUDITOR: 'ऑडिटर', PRODUCER: 'उत्पादक' } },
   chat: {
     hello: 'नमस्ते! बताइए आपने क्या ख़रीदा: वॉइस नोट भेजें या लिखें, जैसे "चार ई-रिक्शा बैटरी ड्राइवर से, लगभग 120 किलो"।',
     helloTyped: 'नमस्ते! लिखिए आपने क्या ख़रीदा, जैसे "चार ई-रिक्शा बैटरी ड्राइवर से, लगभग 120 किलो"।',
@@ -88,7 +94,7 @@ const hi: typeof en = {
   confirm: { yes: 'हाँ, मैंने बेचा / Yes, I sold this', no: 'नहीं / No', done: 'धन्यवाद। दर्ज हो गया।', rejected: 'दर्ज किया कि यह सही नहीं है।',
     used: 'यह लिंक पहले ही इस्तेमाल हो चुका है।', expired: 'यह लिंक पुराना हो गया है।', what: 'क्या आपने यह बेचा?' },
   verify: { title: 'सार्वजनिक जाँच', ok: 'चेन सही: {{checked}} में से {{checked}} रिकॉर्ड ठीक', bad: 'रिकॉर्ड {{seq}} पर चेन टूटी',
-    reason: 'कारण', digest: 'आख़िरी प्रकाशित दैनिक रूट', key: 'सार्वजनिक हस्ताक्षर कुंजी', explain: 'हर रिकॉर्ड पिछले रिकॉर्ड के हैश से जुड़ा है और AWS KMS की कुंजी से हस्ताक्षरित है। किसी भी रिकॉर्ड को बदलने से चेन उसी रिकॉर्ड पर टूट जाती है।' },
+    again: 'फिर जाँचें', reason: 'कारण', digest: 'आख़िरी प्रकाशित दैनिक रूट', key: 'सार्वजनिक हस्ताक्षर कुंजी', explain: 'हर रिकॉर्ड पिछले रिकॉर्ड के हैश से जुड़ा है और AWS KMS की कुंजी से हस्ताक्षरित है। किसी भी रिकॉर्ड को बदलने से चेन उसी रिकॉर्ड पर टूट जाती है।' },
   chip: { BOTH_PARTIES_CONFIRMED: 'विक्रेता ने अपने फ़ोन से पुष्टि की', HANDLER_CONFIRMED: 'विक्रेता ने अपने फ़ोन से पुष्टि की (कुछ बातें)',
     SAME_DEVICE_CONFIRMED: 'ख़रीदार के फ़ोन पर पुष्टि (स्वतंत्र नहीं)', BUYER_REPORTED: 'सिर्फ़ ख़रीदार ने दर्ज किया' },
   err: { generic: 'कुछ ग़लत हुआ। फिर से कोशिश करें।', forbidden: 'आपको यह करने की अनुमति नहीं है।' },

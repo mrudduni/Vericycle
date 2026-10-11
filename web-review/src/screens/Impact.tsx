@@ -22,10 +22,11 @@ export default function Impact() {
   useEffect(() => { getImpact().then(setMs, setErr); }, []);
   return (
     <main>
-      <h2>{t('impact')}</h2>
-      <p className="muted">Public figures from the custody ledger and ClaimGuard runs. Every number opens its source.</p>
+      <span className="eyebrow">Public · live</span>
+      <h2 style={{ fontSize: 'clamp(34px, 4vw, 52px)', margin: '8px 0 10px' }}>{t('impact')}</h2>
+      <p className="muted" style={{ fontSize: 17, maxWidth: 640, marginTop: 0, marginBottom: 28 }}>Public figures from the custody ledger and ClaimGuard runs. Every number opens its source.</p>
       <Err e={err} />
-      {!ms && !err && <p className="muted" role="status">{t('loading')}</p>}
+      {!ms && !err && <div className="metrics" role="status" aria-label={t('loading')}>{[0, 1, 2].map((i) => <div key={i} className="skel" style={{ height: 180 }} />)}</div>}
       <div className="metrics">
         {ms?.map((m) => {
           const ratio = m.unit === 'ratio';

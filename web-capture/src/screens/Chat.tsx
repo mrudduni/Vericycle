@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { get, post, uploadEvidence, ApiError } from '../lib/api';
 import { deviceId, ulid } from '../lib/ids';
 import { Link, QR, Chip } from '../components/ui';
+import { Icon } from '../components/Icon';
 
 type Card = {
   draft_id: string; status: 'READY' | 'TRANSCRIBING' | 'FAILED'; transcript?: string; material?: string;
@@ -96,7 +97,7 @@ export default function Chat() {
 
   return (
     <div className="chat">
-      {!online && <div className="banner" role="status">📶 {t('chat.offline')}</div>}
+      {!online && <div className="banner" role="status"><Icon name="wifiOff" size={18} /> {t('chat.offline')}</div>}
       <div className="msgs" aria-live="polite">
         {msgs.map((m) => {
           if ('card' in m) return <DraftCard key={m.id} card={m.card} done={m.done} busy={busy} onConfirm={(e) => confirm(m.card, e)} />;
@@ -108,18 +109,18 @@ export default function Chat() {
             </div>
           );
         })}
-        {busy && <div className="bubble bot muted">…</div>}
+        {busy && <div className="bubble bot muted" aria-label="…"><span className="live-dot" /> <span className="live-dot" style={{ animationDelay: '.2s' }} /> <span className="live-dot" style={{ animationDelay: '.4s' }} /></div>}
         <div ref={bottom} />
       </div>
       <form className="composer" onSubmit={(e) => { e.preventDefault(); void sendText(); }}>
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder={recording ? t('chat.recording') : t('chat.placeholder')}
           aria-label={t('chat.placeholder')} lang={i18n.language} enterKeyHint="send" disabled={!online} />
         {text.trim() || !VOICE
-          ? <button className="send" type="submit" aria-label="Send" disabled={busy || !text.trim()}>➤</button>
+          ? <button className="send" type="submit" aria-label="Send" disabled={busy || !text.trim()}><Icon name="send" /></button>
           : <button type="button" className={`mic ${recording ? 'rec' : ''}`} aria-label={t('chat.hold')} title={t('chat.hold')}
               disabled={!online || busy}
               onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); void startRec(); }}
-              onPointerUp={stopRec} onPointerCancel={stopRec} onContextMenu={(e) => e.preventDefault()}>🎤</button>}
+              onPointerUp={stopRec} onPointerCancel={stopRec} onContextMenu={(e) => e.preventDefault()}><Icon name="mic" /></button>}
       </form>
     </div>
   );
@@ -189,7 +190,7 @@ function ReceiptCard({ r }: { r: any }) {
   const sellerUrl = r.wa_confirm_link || r.confirm_url;
   return (
     <div className="bubble bot wide">
-      <p style={{ marginTop: 0, fontWeight: 700 }}>✅ {t('chat.saved')}</p>
+      <p className="saved"><span className="tick"><Icon name="check" size={18} /></span>{t('chat.saved')}</p>
       <p className="small"><Link to={`/b/${r.batch_id}`}>{r.batch_id}</Link> · <Chip status={r.event?.confirmation?.status ?? 'BUYER_REPORTED'} /></p>
       <div className="qrs">
         <QR url={r.receipt_url} label={'① ' + t('chat.nextHandler')} />

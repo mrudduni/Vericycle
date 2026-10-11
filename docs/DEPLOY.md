@@ -38,7 +38,7 @@ cd infra/chaintrack && npm ci
 npx cdk deploy -c stage=prod OAE-Prod-Core OAE-Prod-CaptureWeb
 CAP=$(aws ssm get-parameter --name /openaeye/prod/capture/web-url --query Parameter.Value --output text)
 # Review web hosting must exist before CORS origins can be set: deploy it from the claimguard app first (step below), then:
-npx cdk deploy -c stage=prod -c webUrl=$CAP -c webOrigins=$CAP -c modelId=amazon.nova-lite-v1:0 -c voice=off OAE-Prod-Capture
+npx cdk deploy -c stage=prod -c webUrl=$CAP -c webOrigins=$CAP,$REV -c modelId=amazon.nova-lite-v1:0 -c voice=off OAE-Prod-Capture
 cd ../.. && python scripts/chaintrack/seed_demo.py --stage prod
 python scripts/chaintrack/create_demo_users.py --stage prod
 OAE_VOICE=off bash scripts/chaintrack/deploy_web.sh prod
