@@ -19,7 +19,7 @@ WeMakeDevs × AWS Environmental Hacks, track: Waste and Energy. Full design: [`S
 | Public verify page for batch B-0042 | https://main.d2aof528zfa6ax.amplifyapp.com/v/B-0042 |
 | Review dashboard (auditors, producers; desktop) | https://main.dgf1yym1lb668.amplifyapp.com |
 | Capture API | https://m5mvi60sjd.execute-api.ap-southeast-2.amazonaws.com |
-| Review API | REVIEW_API |
+| Review API | https://kzztwu22mi.execute-api.ap-southeast-2.amazonaws.com |
 
 All demo data is synthetic. Demo sign-ins are created by `scripts/chaintrack/create_demo_users.py`; their passwords are not in this repo.
 
