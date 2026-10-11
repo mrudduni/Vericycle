@@ -124,8 +124,8 @@ class WhatsAppIngest:
         collector = self._collector(sender_hmac)
         if collector is None:
             self._reply(m, text_msg(m.sender,
-                "नमस्ते! यह नंबर अभी OpenAEye में कलेक्टर के रूप में दर्ज नहीं है। जुड़ने के लिए अपने एग्रीगेटर से बात करें।\n"
-                "Hello! This number is not registered as a collector on OpenAEye yet. Please ask your aggregator to register you."))
+                "नमस्ते! यह नंबर अभी Vericycle में कलेक्टर के रूप में दर्ज नहीं है। जुड़ने के लिए अपने एग्रीगेटर से बात करें।\n"
+                "Hello! This number is not registered as a collector on Vericycle yet. Please ask your aggregator to register you."))
             return "unregistered"
 
         if m.kind == "button":

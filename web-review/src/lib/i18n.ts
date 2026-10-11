@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 
 type Lang = 'en' | 'hi';
 const en = {
-  app: 'OpenAEye Review', claims: 'Claims', impact: 'Impact', lang: 'हिन्दी', print: 'Print report', signOut: 'Sign out',
+  app: 'Vericycle Review', reviewSub: 'Claim review', claims: 'Claims', impact: 'Impact', lang: 'हिन्दी', print: 'Print report', signOut: 'Sign out',
   claim: 'Claim', recycler: 'Recycler', product: 'Product', period: 'Period', flags: 'Flags', coverage: 'Coverage', lastRun: 'Last run',
   allProducts: 'All products', filterProduct: 'Filter by product', noFlags: 'No flags', notRun: 'Not run',
   howTitle: 'How to read this', dismiss: 'Dismiss',
@@ -20,7 +20,7 @@ const en = {
   legend: 'Legend', back: 'All claims', source: 'Source', close: 'Close', ruleResults: 'Rule results',
   loading: 'Loading...', role: 'Role',
   signIn: 'Sign in', signInHint: 'Use the demo account your team gave you.', tagline: 'Proof of recycling', about: 'About',
-  collectorApp: 'Collector app', footer: 'OpenAEye · consistency, not certification. A passing claim is consistent with available data; it is not a certificate.',
+  collectorApp: 'Collector app', footer: 'Vericycle · consistency, not certification. A passing claim is consistent with available data; it is not a certificate.',
   footerData: 'Demo data is synthetic · AWS ap-southeast-2', overview: 'Overview', claimsChecked: 'Claims checked', hardFlags: 'Hard flags',
   softFlags: 'Soft flags', avgCoverage: 'Average coverage', claimsOf: 'claims', needsLook: 'need a closer look', breakLimit: 'break a physical limit',
   linked: 'of claimed tonnage linked to handovers', reviewQueue: 'Review queue', sortedHint: 'Sorted by severity: hard flags first.',
@@ -32,7 +32,7 @@ const en = {
 } as const;
 export type Key = keyof typeof en;
 const hi: Partial<Record<Key, string>> = {
-  app: 'OpenAEye समीक्षा', claims: 'दावे', impact: 'प्रभाव', lang: 'English', print: 'रिपोर्ट छापें', signOut: 'साइन आउट',
+  app: 'Vericycle समीक्षा', reviewSub: 'दावों की समीक्षा', claims: 'दावे', impact: 'प्रभाव', lang: 'English', print: 'रिपोर्ट छापें', signOut: 'साइन आउट',
   claim: 'दावा', recycler: 'रिसाइक्लर', product: 'उत्पाद', period: 'अवधि', flags: 'फ़्लैग', coverage: 'कवरेज', lastRun: 'आख़िरी जाँच',
   allProducts: 'सभी उत्पाद', filterProduct: 'उत्पाद से छाँटें', noFlags: 'कोई फ़्लैग नहीं', notRun: 'जाँच नहीं हुई',
   howTitle: 'इसे कैसे पढ़ें', dismiss: 'बंद करें',
@@ -47,7 +47,7 @@ const hi: Partial<Record<Key, string>> = {
   recyclerView: 'रिसाइक्लर दृश्य', respond: 'आपका उत्तर', sendResponse: 'उत्तर भेजें', legend: 'संकेत', back: 'सभी दावे',
   source: 'स्रोत', close: 'बंद करें', ruleResults: 'नियम के नतीजे', loading: 'लोड हो रहा है...', role: 'भूमिका',
   signIn: 'साइन इन', signInHint: 'टीम से मिला डेमो खाता इस्तेमाल करें।', tagline: 'रीसाइक्लिंग का सबूत', about: 'परिचय',
-  collectorApp: 'कलेक्टर ऐप', footer: 'OpenAEye · संगति, प्रमाणन नहीं। पास हुआ दावा उपलब्ध डेटा के अनुरूप है; वह कभी “सत्यापित” नहीं कहलाता।',
+  collectorApp: 'कलेक्टर ऐप', footer: 'Vericycle · संगति, प्रमाणन नहीं। पास हुआ दावा उपलब्ध डेटा के अनुरूप है; वह कभी “सत्यापित” नहीं कहलाता।',
   footerData: 'डेमो डेटा काल्पनिक है · AWS ap-southeast-2', overview: 'सारांश', claimsChecked: 'जाँचे गए दावे', hardFlags: 'HARD फ़्लैग',
   softFlags: 'SOFT फ़्लैग', avgCoverage: 'औसत कवरेज', claimsOf: 'दावे', needsLook: 'पर और नज़र चाहिए', breakLimit: 'भौतिक सीमा तोड़ते हैं',
   linked: 'दावा किया गया वज़न हैंडओवर से जुड़ा', reviewQueue: 'समीक्षा सूची', sortedHint: 'गंभीरता के क्रम में: HARD फ़्लैग पहले।',

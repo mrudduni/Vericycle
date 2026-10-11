@@ -67,7 +67,7 @@ def _claimed_roles(body: Any) -> set[str]:
 @dataclass
 class Settings:
     web_url: str = "https://localhost:5173"
-    wa_number: str | None = None           # OpenAEye WhatsApp number, digits only, for wa.me links
+    wa_number: str | None = None           # Vericycle WhatsApp number, digits only, for wa.me links
     evidence_bucket: str = "local-evidence"
 
 

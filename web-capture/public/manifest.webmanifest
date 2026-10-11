@@ -1,6 +1,6 @@
 {
-  "name": "OpenAEye ChainTrack",
-  "short_name": "ChainTrack",
+  "name": "Vericycle",
+  "short_name": "Vericycle",
   "description": "Record handovers of batteries, phones and ACs.",
   "start_url": "/",
   "display": "standalone",

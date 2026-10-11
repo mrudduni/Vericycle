@@ -1,8 +1,8 @@
-# OpenAEye
+# Vericycle
 
 India certifies electronics and battery recycling mainly on documents the recycler uploads about its own work. Tax officers, state boards and audit teams check those documents afterwards and have caught fakes, but nobody is required to witness the product changing hands before a certificate is issued.
 
-OpenAEye adds two things:
+Vericycle adds two things:
 
 - **ChainTrack** records the first handover. A collector types what they bought, in Hindi or English. The record is signed, the seller gets a receipt with a QR code, and each later handover (aggregator, recycler intake, split, merge) links to the same batch. Every field shows who stated it and who confirmed it.
 - **ClaimGuard** checks a recycler's claim against arithmetic and evidence: tonnage above licensed capacity, output above input, power use too low for the tonnage, a photo whose light contradicts its timestamp, the same photo reused across batches, a batch cited by two claims. Every flag shows the observed value, the limit, the evidence used and the published source of the limit.

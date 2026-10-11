@@ -1,4 +1,4 @@
-# Handover: OpenAEye MVP
+# Handover: Vericycle (repo: OpenAEye) MVP
 
 State as of 11 Oct 2026. Replaces the 10 Oct handover. Read `docs/team/CONTRACT.md`, then this file, then `docs/DEPLOY.md`.
 

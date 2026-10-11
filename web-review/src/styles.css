@@ -184,10 +184,6 @@ button.chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-1); }
 
 .aws { display: flex; flex-wrap: wrap; gap: 10px; }
 .aws .pill { padding: 8px 14px; font-size: 13.5px; background: var(--card); }
-.honest { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; margin-top: 28px; }
-.honest .card { padding: 18px 20px; }
-.honest h4 { color: var(--ink); display: flex; align-items: center; gap: 8px; }
-.honest p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
 
 /* ---------- sign-in ---------- */
 .signin { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: calc(100vh - 66px); }

@@ -16,7 +16,7 @@ const C = {
   en: {
     eyebrow: 'Proof of recycling for batteries and e-waste in India',
     h1a: 'Recycling you can', h1b: 'check', h1c: ', from the very first handover.',
-    lede: 'India certifies recycling from documents the recycler uploads about itself. OpenAEye records the first handover on a phone, chains every transfer with a signature, and checks each recycling claim against arithmetic and evidence.',
+    lede: 'India certifies recycling from documents the recycler uploads about itself. Vericycle records the first handover on a phone, chains every transfer with a signature, and checks each recycling claim against arithmetic and evidence.',
     ctaReview: 'Review claims', ctaCollector: 'Open the collector app', ctaVerify: 'Verify a batch',
     t1: 'Every number cites its source', t2: 'No informal worker is ever named', t3: 'AI explains, never decides',
     liveLedger: 'Live from the ledger', chainOk: (n: number) => `Chain intact: ${n} of ${n} signed records check out`,
@@ -57,17 +57,11 @@ const C = {
       ['History is append-only', 'Corrections are new signed events. Nothing is overwritten.'],
     ],
     awsEyebrow: 'Built on AWS', awsH: 'Serverless, signed and auditable',
-    honestH: 'Honest about this demo',
-    honest: [
-      ['alert', 'Voice and WhatsApp are off here', 'This AWS account blocks Amazon Transcribe and WhatsApp messaging, so the demo chat is typed. Both paths are built and tested.'],
-      ['globe', 'Hosted in Sydney', 'The account cannot use Mumbai, so everything runs in ap-southeast-2. All data is synthetic.'],
-      ['spark', 'AI may be resting', 'When Bedrock is unavailable, extraction and explanations fall back to deterministic, cited text. Flags never depend on it.'],
-    ] as [IconName, string, string][],
   },
   hi: {
     eyebrow: 'भारत में बैटरी और ई-कचरे की रीसाइक्लिंग का सबूत',
     h1a: 'रीसाइक्लिंग जिसे आप', h1b: 'जाँच', h1c: ' सकें, पहले हैंडओवर से ही।',
-    lede: 'भारत में रीसाइक्लिंग का प्रमाण उन्हीं कागज़ों से बनता है जो रीसाइक्लर ख़ुद अपलोड करता है। OpenAEye पहला हैंडओवर फ़ोन पर दर्ज करता है, हर ट्रांसफ़र को हस्ताक्षर से जोड़ता है, और हर दावे को हिसाब और सबूत से जाँचता है।',
+    lede: 'भारत में रीसाइक्लिंग का प्रमाण उन्हीं कागज़ों से बनता है जो रीसाइक्लर ख़ुद अपलोड करता है। Vericycle पहला हैंडओवर फ़ोन पर दर्ज करता है, हर ट्रांसफ़र को हस्ताक्षर से जोड़ता है, और हर दावे को हिसाब और सबूत से जाँचता है।',
     ctaReview: 'दावों की समीक्षा', ctaCollector: 'कलेक्टर ऐप खोलें', ctaVerify: 'बैच जाँचें',
     t1: 'हर आँकड़े का स्रोत', t2: 'किसी असंगठित कामगार का नाम नहीं', t3: 'AI समझाता है, फ़ैसला नहीं करता',
     liveLedger: 'लेजर से लाइव', chainOk: (n: number) => `चेन सही: ${n} में से ${n} हस्ताक्षरित रिकॉर्ड ठीक`,
@@ -108,12 +102,6 @@ const C = {
       ['इतिहास सिर्फ़ जुड़ता है', 'सुधार नई हस्ताक्षरित घटनाएँ हैं। कुछ भी मिटाया नहीं जाता।'],
     ],
     awsEyebrow: 'AWS पर बना', awsH: 'सर्वरलेस, हस्ताक्षरित और जाँचने योग्य',
-    honestH: 'इस डेमो के बारे में साफ़ बात',
-    honest: [
-      ['alert', 'यहाँ आवाज़ और WhatsApp बंद हैं', 'यह AWS खाता Amazon Transcribe और WhatsApp संदेश रोकता है, इसलिए डेमो चैट में लिखना होता है। दोनों रास्ते बने और जाँचे हुए हैं।'],
-      ['globe', 'सिडनी में होस्ट', 'खाता मुंबई इस्तेमाल नहीं कर सकता, इसलिए सब कुछ ap-southeast-2 में है। सारा डेटा काल्पनिक है।'],
-      ['spark', 'AI आराम पर हो सकता है', 'Bedrock न मिलने पर पढ़ना और समझाना तय नियमों वाले, उद्धृत पाठ से होता है। फ़्लैग कभी इस पर निर्भर नहीं।'],
-    ] as [IconName, string, string][],
   },
 };
 
@@ -323,10 +311,6 @@ export default function Landing() {
         <div className="wrap">
           <div className="head" style={{ marginBottom: 24 }}><span className="eyebrow">{c.awsEyebrow}</span><h2>{c.awsH}</h2></div>
           <div className="aws">{AWS_SERVICES.map((s) => <span className="pill" key={s}>{s}</span>)}</div>
-          <h3 style={{ marginTop: 40, fontSize: 18 }}>{c.honestH}</h3>
-          <div className="honest">
-            {c.honest.map(([i, h, p]) => <div className="card" key={h}><h4><Icon name={i} size={18} />{h}</h4><p>{p}</p></div>)}
-          </div>
         </div>
       </section>
     </main>

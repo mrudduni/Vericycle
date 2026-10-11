@@ -62,9 +62,9 @@ export default function App() {
     <SourceDrawerHost>
       <div className={`app ${isLanding ? 'landing' : ''}`}>
         <header className="top noprint">
-          <a className="brand" href={s ? '#/' : '#/welcome'} aria-label="OpenAEye home">
+          <a className="brand" href={s ? '#/' : '#/welcome'} aria-label="Vericycle home">
             <Mark size={34} />
-            <span><span className="word">Open<em>AE</em>ye</span><span className="sub">{s ? 'ClaimGuard review' : t('tagline')}</span></span>
+            <span><span className="word">Veri<em>cycle</em></span><span className="sub">{s ? t('reviewSub') : t('tagline')}</span></span>
           </a>
           <nav aria-label="Main">
             {s && <a href="#/" aria-current={!isImpact && !isLanding ? 'page' : undefined}><Icon name="layers" size={17} />{t('claims')}</a>}
