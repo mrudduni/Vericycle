@@ -40,7 +40,7 @@ The account belongs to an AWS organisation whose service control policy denies t
 | Amazon Textract | No weigh-slip/bill field reading | File is still hashed and stored; `extracted.unavailable` is set; rules return `INSUFFICIENT_EVIDENCE` |
 | End User Messaging Social | No WhatsApp | Not deployed; the PWA's WhatsApp-style chat is the demo path |
 
-**Bedrock** is different: on 10 Oct it said "account is being verified" (normally under 2 hours). When it clears, extraction and the copilot use Nova Lite automatically. Test it with the `converse` command in DEPLOY.md §0.
+**Bedrock** is different: on 10 Oct it said "account is being verified"; on 11 Oct it returned `ThrottlingException: Too many tokens per day`, so access exists but the new account's daily quota is exhausted or very low. Check Service Quotas → Amazon Bedrock for Nova Lite tokens per day and request an increase. When calls succeed, extraction and the copilot use Nova Lite automatically. Test it with the `converse` command in DEPLOY.md §0.
 
 ## 4. Fixes made during the handover (branch `shaurya/deploy-fixes`)
 
@@ -49,14 +49,14 @@ The account belongs to an AWS organisation whose service control policy denies t
 - Fallbacks for a Bedrock outage, missing Transcribe and missing Textract (with tests).
 - Review API `/impact` returned 500 on AWS (an import of a module that boto3 does not ship). Fixed and tested.
 - Copilot timed out at 29 s while Bedrock was denied. Added a fast-fail client, a 12 s budget and a 5-minute cool-down.
-- Offline reader missed plural "batteries". Fixed and tested. **Not yet redeployed to `OAE-Prod-Capture`** (the AWS session expired). See §5.
+- Offline reader missed plural "batteries". Fixed, tested and redeployed; the live chat now reads "4 × lead-acid battery, about 120 kg (stated), from a driver".
 - cdk-nag keys made safe when the account is unresolved at synth.
 
 Tests: 117 ChainTrack, 60 ClaimGuard, all passing.
 
 ## 5. Next steps
 
-1. `aws login --profile openaeye --region ap-southeast-2`, then redeploy Capture (exact command in DEPLOY.md §1, with `-c voice=off`).
+1. Request a Bedrock quota increase for Nova Lite tokens per day (Service Quotas, ap-southeast-2).
 2. Sign in to both web apps as the demo users; run the capture chat → confirm → transfer → intake flow, and the dashboard review flow.
 3. Push `shaurya/deploy-fixes` and merge it to `main` (CONTRACT changes need both people; both agreed).
 4. Budget alarms at $20, $50, $100.

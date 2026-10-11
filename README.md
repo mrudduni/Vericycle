@@ -57,7 +57,7 @@ All demo data is synthetic. Demo sign-ins are created by `scripts/chaintrack/cre
 - **Voice notes (Amazon Transcribe): off in the deployment.** The account denies Transcribe, so the chat is typed only. The voice code path exists and is tested offline.
 - **Weigh slip and bill reading (Amazon Textract): unavailable in the deployment** for the same reason. Uploaded documents are still hashed and stored; rules that need their fields return `INSUFFICIENT_EVIDENCE`.
 - **WhatsApp (End User Messaging Social): not deployed.** Denied in the account. The capture app's WhatsApp-style chat runs the same pipeline. The WhatsApp code path is tested offline.
-- **Bedrock:** on 10 Oct 2026 the account returned "account is being verified". Until it clears, extraction uses the deterministic reader (every field marked "please check") and the copilot gives its deterministic, cited explanation. No change is needed when it clears.
+- **Bedrock:** the new account first returned "account is being verified", then (11 Oct) a daily token quota throttle. Until calls succeed, extraction uses the deterministic reader (every field marked "please check") and the copilot gives its deterministic, cited explanation. No change is needed when it clears.
 - **Not built:** hosting the copilot on Bedrock AgentCore Runtime (it runs inside the review Lambda); Automated Reasoning checks.
 - **R9 satellite:** run on real Sentinel-2 imagery over Hapur; it can only pass or be inconclusive, never flag. Its 1.5× threshold is a demo value. Off by default.
 - **R5 photo light classifier:** calibrated only on synthetic images.
