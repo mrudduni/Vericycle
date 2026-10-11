@@ -1,8 +1,9 @@
-"""WhatsApp intake via AWS End User Messaging Social (SHAURYA.md 3.4).
+"""WhatsApp intake, transport-independent (SHAURYA.md 3.4).
 
-EUMS publishes each inbound webhook to SNS; the Lambda (``handler``) parses ``whatsAppWebhookEntry``
-and calls ``WhatsAppIngest.on_message`` once per WhatsApp message ID (Meta retries are deduplicated by
-Powertools idempotency in the handler, and again here by a conditional put on the message ID).
+Two transports feed ``WhatsAppIngest.on_message`` with the same Meta webhook ``entry`` objects:
+AWS End User Messaging Social via SNS (``handler``, ``parse_sns``) and Meta's WhatsApp Cloud API
+webhook directly (``cloud``, ``parse_webhook``). Each WhatsApp message ID is processed once (Meta
+retries are deduplicated by a conditional put on the message ID).
 
 Privacy (P6): the sender's number is turned into an HMAC at once. The only copy kept is a KMS-encrypted
 reply address on the 24-hour draft, needed to answer after transcription finishes.
@@ -37,10 +38,21 @@ def parse_sns(record_message: str) -> list[Inbound]:
     entry = body.get("whatsAppWebhookEntry")
     entry = json.loads(entry) if isinstance(entry, str) else (entry or {})
     ctx_ids = [p.get("arn") or p.get("metaPhoneNumberId") for p in body.get("context", {}).get("MetaPhoneNumberIds", [])]
+    return parse_entry(entry, ctx_ids[0] if ctx_ids else None)
+
+
+def parse_webhook(body: dict[str, Any]) -> list[Inbound]:
+    """Meta Cloud API webhook body (``object: whatsapp_business_account``) -> inbound messages."""
+    if body.get("object") != "whatsapp_business_account":
+        return []
+    return [m for entry in body.get("entry", []) or [] for m in parse_entry(entry, None)]
+
+
+def parse_entry(entry: dict[str, Any], origin_override: str | None) -> list[Inbound]:
     out: list[Inbound] = []
     for ch in entry.get("changes", []):
         v = ch.get("value", {})
-        origin = ctx_ids[0] if ctx_ids else v.get("metadata", {}).get("phone_number_id")
+        origin = origin_override or v.get("metadata", {}).get("phone_number_id")
         for m in v.get("messages", []) or []:
             t = m.get("type")
             base = dict(message_id=m["id"], sender=m["from"], phone_number_id=origin)
@@ -143,6 +155,10 @@ class WhatsAppIngest:
 
     def _audio(self, m: Inbound, collector, sender_hmac: str) -> str:
         from capture import chat, ids
+        if self.transcriber is None:   # voice off in this deployment (no speech-to-text service)
+            self._reply(m, text_msg(m.sender, "अभी वॉइस नोट नहीं सुन सकते। कृपया लिखकर भेजें, जैसे \"4 बैटरी 120 किलो ड्राइवर से\"।\n"
+                                              "Voice notes are not available right now. Please type it, e.g. \"4 batteries 120 kg from a driver\"."))
+            return "voice_off"
         evid = ids.evidence_id()
         key = f"audio/{evid}.ogg"
         self.fetch_media(m.media_id, m.phone_number_id, key)

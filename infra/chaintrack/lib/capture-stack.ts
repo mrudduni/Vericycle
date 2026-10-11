@@ -17,6 +17,7 @@ import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwi from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwa from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { CoreStack } from './core-stack';
 import { nag, StageProps } from './common';
 
@@ -28,7 +29,8 @@ export interface CaptureStackProps extends StackProps, StageProps {
   bedrockRegion: string;
   voice: boolean;           // false where Amazon Transcribe is unavailable; the chat then asks for typed text
   waNumber: string;         // digits only, or "" until the WhatsApp number is linked
-  waPhoneNumberId: string;  // EUMS phone-number-id ARN; "" = WhatsApp resources not deployed
+  waPhoneNumberId: string;  // EUMS phone-number-id ARN (waMode eums) or Meta phone number ID (waMode cloud); "" = no WhatsApp
+  waMode: 'eums' | 'cloud'; // eums: AWS End User Messaging Social via SNS; cloud: Meta WhatsApp Cloud API webhook
   alarmEmail: string;       // "" = alarms go to the SNS topic only
 }
 
@@ -168,8 +170,10 @@ export class CaptureStack extends Stack {
         'Basic execution role only grants CloudWatch Logs writes for this function.');
     }
 
-    // --- WhatsApp via End User Messaging Social (only once a number is linked) -------------
-    if (props.waPhoneNumberId) {
+    // --- WhatsApp (only once a number is linked) ---------------------------------------------
+    // eums: AWS End User Messaging Social publishes webhooks to SNS. cloud: Meta calls our webhook directly.
+    let wa: lambda.Function | undefined;
+    if (props.waPhoneNumberId && props.waMode === 'eums') {
       const topic = new sns.Topic(this, 'WhatsAppInbound', {
         topicName: `oae-${stage}-whatsapp-inbound`, masterKey: core.dataKey, enforceSSL: true,
       });
@@ -179,13 +183,35 @@ export class CaptureStack extends Stack {
         conditions: { StringEquals: { 'aws:SourceAccount': this.account } },
       }));
       core.dataKey.grantEncryptDecrypt(new iam.ServicePrincipal('social-messaging.amazonaws.com'));
-      const wa = fn('whatsapp-ingest', 'ingest.handler.handler', 60);
+      wa = fn('whatsapp-ingest', 'ingest.handler.handler', 60);
       topic.addSubscription(new subs.LambdaSubscription(wa, { deadLetterQueue: dlq }));
       for (const f of [wa, transcribeDone]) {
         f.addToRolePolicy(new iam.PolicyStatement({
           actions: ['social-messaging:SendWhatsAppMessage', 'social-messaging:GetWhatsAppMessageMedia', 'social-messaging:PostWhatsAppMessageMedia'],
           resources: [props.waPhoneNumberId],
         }));
+      }
+      new CfnOutput(this, 'WhatsAppTopicArn', { value: topic.topicArn, description: 'Set as the event destination of the WABA in the EUMS console' });
+    }
+    let waSecret: secretsmanager.Secret | undefined;
+    if (props.waPhoneNumberId && props.waMode === 'cloud') {
+      // verify_token is generated here; access_token and app_secret are pasted in from the Meta app dashboard.
+      waSecret = new secretsmanager.Secret(this, 'WhatsAppCloudSecret', {
+        secretName: `oae-${stage}-whatsapp-cloud`,   // AWS-managed key: a Core-stack key here would make Core depend on this stack
+        description: 'Meta WhatsApp Cloud API: verify_token (generated), access_token and app_secret (set by a person)',
+        generateSecretString: { secretStringTemplate: JSON.stringify({ access_token: '', app_secret: '' }),
+          generateStringKey: 'verify_token', excludePunctuation: true, passwordLength: 32 },
+      });
+      nag(waSecret, 'AwsSolutions::AwsSolutions-SMG4', 'Meta issues and rotates the access token and app secret; rotation is done in the Meta dashboard, not by a Lambda.');
+      wa = fn('whatsapp-webhook', 'ingest.cloud.handler', 29);
+      for (const f of [wa, transcribeDone]) {
+        waSecret.grantRead(f);
+        f.addEnvironment('WA_MODE', 'cloud');
+        f.addEnvironment('WA_SECRET_ARN', waSecret.secretArn);
+      }
+    }
+    if (wa) {
+      for (const f of [wa, transcribeDone]) {
         f.addToRolePolicy(new iam.PolicyStatement({ actions: ['kms:Encrypt', 'kms:Decrypt'], resources: [core.dataKey.keyArn] }));
       }
       wa.addToRolePolicy(ledgerRw);
@@ -201,7 +227,6 @@ export class CaptureStack extends Stack {
       core.evidenceBucket.grantPut(wa);
       nag(wa.role!, 'AwsSolutions::AwsSolutions-IAM4[Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole]',
         'Basic execution role only grants CloudWatch Logs writes for this function.');
-      new CfnOutput(this, 'WhatsAppTopicArn', { value: topic.topicArn, description: 'Set as the event destination of the WABA in the EUMS console' });
     }
 
     // --- Transcribe completion -> draft READY (no Lambda sleeps) ---------------------------
@@ -271,6 +296,15 @@ export class CaptureStack extends Stack {
         nag(r.node.defaultChild!, 'AwsSolutions::AwsSolutions-APIG4',
           'Public by design: receipts, handler confirmation (the single-use token is the credential) and chain verification need no account.');
       }
+    }
+    if (wa && waSecret) {
+      const waInteg = new apigwi.HttpLambdaIntegration('WhatsAppWebhookInteg', wa);
+      for (const r of http.addRoutes({ path: '/whatsapp/webhook', methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST], integration: waInteg })) {
+        nag(r.node.defaultChild!, 'AwsSolutions::AwsSolutions-APIG4',
+          'Meta calls this webhook: GET needs the verify token, POST needs a valid X-Hub-Signature-256 from the app secret.');
+      }
+      new CfnOutput(this, 'WhatsAppWebhookUrl', { value: `${http.apiEndpoint}/whatsapp/webhook`, description: 'Callback URL for the Meta app (WhatsApp > Configuration)' });
+      new CfnOutput(this, 'WhatsAppSecretName', { value: waSecret.secretName, description: 'Paste access_token and app_secret here; verify_token is generated' });
     }
     this.apiUrl = http.apiEndpoint + '/';
 

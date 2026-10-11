@@ -2,6 +2,7 @@
 # One-shot deploy of ChainTrack to a stage, run from a normal terminal on your Mac.
 #   bash scripts/chaintrack/deploy_all.sh shaurya
 #   MODEL_ID=amazon.nova-lite-v1:0 OAE_VOICE=off bash scripts/chaintrack/deploy_all.sh prod   # account 206690614182 (no Transcribe)
+#   WA_PHONE_NUMBER_ID=<Meta phone number ID> WA_NUMBER=<digits> ... adds WhatsApp via the Meta Cloud API
 # Writes a log (no secrets) to ../deploy-<stage>.log next to the repo so Claude can read it.
 set -uo pipefail
 STAGE="${1:-shaurya}"; PROFILE="${AWS_PROFILE:-openaeye}"; REGION="${OAE_REGION:-ap-southeast-2}"
@@ -58,7 +59,8 @@ say "7/9 deploy Capture (extraction model: ${MODEL_ID:-offline})"
 # The review dashboard's landing page calls the public verify endpoint, so its origin is allowed too (if it exists yet).
 REV=$(aws ssm get-parameter --name "/openaeye/$STAGE/review/web-url" --query Parameter.Value --output text 2>/dev/null || true)
 run npx cdk deploy -c stage="$STAGE" -c region="$REGION" -c webUrl="$WEB" -c webOrigins="$WEB${REV:+,$REV},http://localhost:5173" \
-  -c modelId="${MODEL_ID:-offline}" -c voice="${OAE_VOICE:-on}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} "OAE-$S-Capture" --require-approval never || fail "Capture"
+  -c modelId="${MODEL_ID:-offline}" -c voice="${OAE_VOICE:-on}" ${ALARM_EMAIL:+-c alarmEmail=$ALARM_EMAIL} \
+  ${WA_PHONE_NUMBER_ID:+-c waMode=cloud -c waPhoneNumberId=$WA_PHONE_NUMBER_ID -c waNumber=$WA_NUMBER} "OAE-$S-Capture" --require-approval never || fail "Capture"
 API=$(aws ssm get-parameter --name "/openaeye/$STAGE/capture/api-url" --query Parameter.Value --output text)
 echo "api $API" | tee -a "$LOG"
 

@@ -40,5 +40,8 @@ def _notify_whatsapp(draft_id: str) -> None:
     """Drafts that came from WhatsApp get their card sent back there (no-op for web chat drafts)."""
     if not os.environ.get("WA_PHONE_NUMBER_ID"):
         return
-    from ingest.handler import ingest
+    if os.environ.get("WA_MODE") == "cloud":
+        from ingest.cloud import ingest
+    else:
+        from ingest.handler import ingest
     ingest().notify_draft_ready(draft_id)

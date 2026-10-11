@@ -32,6 +32,7 @@ new CaptureStack(app, `OAE-${S}-Capture`, {
   voice: ctx('voice', 'on') !== 'off',
   waNumber: ctx('waNumber', ''),
   waPhoneNumberId: ctx('waPhoneNumberId', ''),
+  waMode: ctx('waMode', 'eums') === 'cloud' ? 'cloud' : 'eums',
   alarmEmail: ctx('alarmEmail', ''),
 });
 

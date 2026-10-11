@@ -81,31 +81,35 @@ Evidence: upload photos, weigh slips, invoices and power bills to `evidence/<cla
 in the claim-evidence bucket (or the capture bucket); the processor extracts EXIF, hashes, light class and Textract fields.
 `python scripts/claimguard/make_sample_photos.py` renders sample photos.
 
-## 2. WhatsApp (real number)
+## 2. WhatsApp (Meta Cloud API)
 
-Needs a phone number that can receive an SMS or voice OTP and is **not** currently registered on the WhatsApp or
-WhatsApp Business app (delete that account first if it is). Do not commit the number to the repo.
+Account 206690614182 cannot use AWS End User Messaging Social, so WhatsApp goes straight to Meta's
+WhatsApp Cloud API: Meta calls `GET/POST /whatsapp/webhook` on the capture API, and replies go out through
+the Graph API. The chat logic is the same as the EUMS path (`ingest/whatsapp.py`); only the transport differs
+(`ingest/cloud.py`). Voice notes get a "please type" reply while voice is off.
 
-Not possible in account `206690614182`: its organisation policy denies End User Messaging Social. The PWA's
-WhatsApp-style chat runs the same pipeline. The steps below apply to an account that allows it.
+1. **Meta app (a person does this).** developers.facebook.com → My Apps → Create app → add the **WhatsApp**
+   product. On **WhatsApp → API Setup** note the **test phone number**, its **Phone number ID**, and add up to five
+   recipient numbers (the collector's and the seller's phones) in the "To" list.
+2. **Deploy** with the phone number ID (not secret) and the display number (digits only):
+   ```bash
+   cd infra/chaintrack && npx cdk deploy -c stage=prod -c region=ap-southeast-2 -c webUrl=$CAP -c webOrigins=$CAP,$REV \
+     -c modelId=amazon.nova-lite-v1:0 -c voice=off -c waMode=cloud -c waPhoneNumberId=<id> -c waNumber=<digits> OAE-Prod-Capture
+   ```
+   Outputs: `WhatsAppWebhookUrl` and `WhatsAppSecretName` (`oae-prod-whatsapp-cloud`).
+3. **Secrets (a person does this; never commit or paste them in chat).** AWS console → Secrets Manager →
+   `oae-prod-whatsapp-cloud` → Retrieve → Edit: set `access_token` (API Setup) and `app_secret`
+   (App settings → Basic). Copy the generated `verify_token`.
+4. **Webhook.** Meta app → WhatsApp → Configuration → Edit: Callback URL = `WhatsAppWebhookUrl`, Verify token =
+   `verify_token` → Verify and save. Under Webhook fields, **subscribe to `messages`**.
+5. **Register the collector's phone** (number typed at a hidden prompt, stored only as an HMAC):
+   `AWS_PROFILE=openaeye python scripts/chaintrack/register_phone.py --stage prod --party COL-118`
+6. **Test.** From that phone, message the test number: "4 e-rickshaw batteries from a driver, about 120 kg".
+   Expect a read-back card with ✅ / ✏️ buttons, then the receipt link and two QR images after ✅.
 
-1. AWS console (region **Asia Pacific (Sydney)**) → **End User Messaging Social** → **Link business account** →
-   **Launch Facebook portal**. Sign in to Facebook, create or choose a Meta Business portfolio, create a WhatsApp Business
-   Account, **add the phone number**, enter the OTP. Pick a display name (Meta reviews it; use "OpenAEye").
-2. Back in the console, confirm the number shows **Active**. Get its identifiers:
-   `aws socialmessaging list-linked-whatsapp-business-accounts --region ap-southeast-2`
-   (copy the phone number ID, e.g. `phone-number-id-…`, and the full ARN).
-3. Redeploy ChainTrack with WhatsApp resources:
-   `npx cdk deploy -c stage=prod … -c waPhoneNumberId=<phone-number-id ARN> -c waNumber=<digits only> OAE-Prod-Capture`
-4. In the EUMS console, open the WABA → **Event destination** → set it to the SNS topic in the stack output
-   `WhatsAppTopicArn`, with **message and event logging** enabled.
-5. Register each collector's number (stored only as an HMAC): `register_collector_phone(repo, hmac(number), "COL-118")`
-   from `services/capture_api` (see `infra/chaintrack/README.md`).
-6. Test: send a Hindi voice note from the registered collector's phone. Expect a card with ✅ / ✏️ buttons within seconds,
-   then the receipt and two QR images after ✅. The seller confirms by tapping the `wa.me` link on their own phone.
-
-Notes: replies inside 24 hours of the user's message need no template. An unverified Meta business starts with low daily
-limits (fine for a demo). If linking stalls, the WhatsApp-style chat inside the PWA runs the same pipeline.
+Notes: the API Setup token expires after 24 hours; for the demo, create a System User token in Meta Business
+Settings (permissions `whatsapp_business_messaging`, `whatsapp_business_management`) and replace `access_token`.
+The test number can only message the numbers on its "To" list. Replies within 24 hours of a user's message need no template.
 
 ## 3. Cost control
 
