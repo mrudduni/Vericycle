@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps, Token } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -282,6 +282,9 @@ export class CaptureStack extends Stack {
 
     // --- documented cdk-nag acknowledgements for wildcard grants ---------------------------------
     const coreName = core.stackName;
+    // cdk-nag keys must be plain strings: concrete account/region when the env sets them, else the pseudo-parameter form.
+    const acct = Token.isUnresolved(this.account) ? '<AWS::AccountId>' : this.account;
+    const rgn = Token.isUnresolved(this.region) ? '<AWS::Region>' : this.region;
     const iam5: [string, string][] = [
       ['Action::kms:GenerateDataKey*', 'CDK grantEncryptDecrypt on the stage data key only (S3/DynamoDB SSE-KMS).'],
       ['Action::kms:ReEncrypt*', 'CDK grantEncryptDecrypt on the stage data key only.'],
@@ -294,8 +297,8 @@ export class CaptureStack extends Stack {
       [`Resource::${coreName}:ExportsOutputFnGetAttLedgerB7379752Arn8FB7B3DC/index/*`, 'GSI2 (party timeline) on the stage ledger table.'],
       [`Resource::${coreName}:ExportsOutputFnGetAttLedgerDigests681569D3ArnC882635C/*`, 'Objects in the stage Object Lock digest bucket.'],
       ['Resource::arn:aws:bedrock:*::foundation-model/*', 'Model chosen at runtime from SSM; cross-region inference profiles route to several regions.'],
-      [`Resource::arn:aws:bedrock:*:${this.account}:inference-profile/*`, 'Model chosen at runtime from SSM (inference profile).'],
-      [`Resource::arn:aws:transcribe:${this.region}:${this.account}:transcription-job/oae-${stage}-*`, 'Only this stage\'s job-name prefix.'],
+      [`Resource::arn:aws:bedrock:*:${acct}:inference-profile/*`, 'Model chosen at runtime from SSM (inference profile).'],
+      [`Resource::arn:aws:transcribe:${rgn}:${acct}:transcription-job/oae-${stage}-*`, 'Only this stage\'s job-name prefix.'],
       ['Resource::<ledgerdigestE0127BFD.Arn>:*', 'Scheduler may invoke any version of the digest function.'],
     ];
     for (const [k, why] of iam5) nag(this, `AwsSolutions::AwsSolutions-IAM5[${k}]`, why);
