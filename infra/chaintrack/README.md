@@ -1,6 +1,6 @@
 # ChainTrack infrastructure (Shaurya)
 
-CDK app with three stacks per stage, all in `ap-south-1`, tagged `project=openaeye`, `stage`, `owner=shaurya`,
+CDK app with three stacks per stage, all in `ap-southeast-2`, tagged `project=openaeye`, `stage`, `owner=shaurya`,
 checked by `cdk-nag` AwsSolutions (every acknowledgement carries a written reason in code).
 
 | Stack | Contents |
@@ -14,8 +14,8 @@ checked by `cdk-nag` AwsSolutions (every acknowledgement carries a written reaso
 ```bash
 export AWS_PROFILE=openaeye                       # from `aws login`
 aws sts get-caller-identity                       # must be Mrudduni's account
-aws cloudformation describe-stacks --stack-name CDKToolkit --region ap-south-1 \
-  || npx cdk bootstrap aws://<account>/ap-south-1
+aws cloudformation describe-stacks --stack-name CDKToolkit --region ap-southeast-2 \
+  || npx cdk bootstrap aws://<account>/ap-southeast-2
 
 bash scripts/chaintrack/build_lambdas.sh           # arm64 deps + code, no Docker
 cd infra/chaintrack && npm ci
@@ -36,12 +36,12 @@ digest on demand: `aws lambda invoke --function-name oae-shaurya-ledger-digest -
 ## Choosing the model
 
 ```bash
-aws bedrock list-inference-profiles --region ap-south-1 --query 'inferenceProfileSummaries[].inferenceProfileId'
-aws bedrock list-foundation-models --region ap-south-1 --by-output-modality TEXT --query 'modelSummaries[].modelId'
+aws bedrock list-inference-profiles --region ap-southeast-2 --query 'inferenceProfileSummaries[].inferenceProfileId'
+aws bedrock list-foundation-models --region ap-southeast-2 --by-output-modality TEXT --query 'modelSummaries[].modelId'
 python scripts/chaintrack/run_eval.py --model <id> --profile openaeye
 ```
 Change it later without a deploy: `aws ssm put-parameter --name /openaeye/<stage>/extract/model-id --value <id> --overwrite`
-(Lambdas cache it per cold start). Disclose any non-Mumbai processing region on the privacy page.
+(Lambdas cache it per cold start). The privacy page states the processing region.
 
 ## WhatsApp (after the number is linked in the EUMS console)
 

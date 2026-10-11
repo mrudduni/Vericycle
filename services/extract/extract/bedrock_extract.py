@@ -92,7 +92,7 @@ def extract_offline(text: str) -> dict:
     t = text.lower()
     material = ("AC_REFRIGERANT" if any(w in t for w in (" ac ", "एसी", "air condition", "split ac", "window ac")) or t.startswith("ac ")
                 else "EWASTE_PHONE" if any(w in t for w in ("phone", "mobile", "फ़ोन", "फोन", "मोबाइल", "handset"))
-                else "BATTERY_LEAD_ACID" if any(w in t for w in ("battery", "baitri", "betri", "bettery", "बैटरी"))
+                else "BATTERY_LEAD_ACID" if any(w in t for w in ("batter", "baitri", "betri", "bettery", "बैटरी", "बैटरि"))
                 else "UNKNOWN")
     src = ("DRIVER" if any(w in t for w in ("driver", "rickshaw wal", "ड्राइवर")) else
            "TECHNICIAN" if any(w in t for w in ("mistri", "mechanic", "technician")) else

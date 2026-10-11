@@ -24,3 +24,10 @@ def test_bedrock_failure_falls_back_to_deterministic_reader(monkeypatch):
 def test_voice_off_returns_no_transcriber(monkeypatch):
     monkeypatch.setenv("VOICE_MODE", "off")
     assert wiring.transcriber() is None
+
+
+def test_offline_reader_knows_plural_batteries():
+    from extract import bedrock_extract as bx
+
+    out = bx.extract_offline("4 e-rickshaw batteries from a driver, about 120 kg")
+    assert (out["material"], out["count"], out["weight_kg"], out["source_category"]) == ("BATTERY_LEAD_ACID", 4, 120.0, "DRIVER")

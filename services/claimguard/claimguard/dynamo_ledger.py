@@ -67,7 +67,6 @@ class DynamoLedgerReader:
         return batch
 
     def all_batches(self) -> list[Batch]:
-        from boto3.dynamodb.attributes import TypeDeserializer  # noqa: F401, PLC0415
         from boto3.dynamodb.conditions import Attr  # noqa: PLC0415
 
         ids, start = [], None

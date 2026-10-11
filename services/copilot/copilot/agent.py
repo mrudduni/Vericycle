@@ -86,19 +86,42 @@ def build_tools(get_detail: Callable[[str], dict]) -> list:
     return [get_claim, get_rule_results, get_scores, get_evidence, get_source, get_batch_lineage]
 
 
+LLM_BUDGET_S = 12
+LLM_COOLDOWN_S = 300  # after a model failure, answer deterministically for this long
+
+
 def make_llm_runner(get_detail: Callable[[str], dict], model_id: str, region: str,
                     guardrail_id: str | None = None, guardrail_version: str | None = None) -> Callable[[str, str], str]:
     from strands import Agent  # noqa: PLC0415
     from strands.models import BedrockModel  # noqa: PLC0415
 
-    kwargs: dict[str, Any] = {"model_id": model_id, "region_name": region, "temperature": 0.1}
+    from botocore.config import Config  # noqa: PLC0415
+
+    # API Gateway cuts the request at 29 s: fail fast so the deterministic explanation always gets back in time.
+    kwargs: dict[str, Any] = {"model_id": model_id, "region_name": region, "temperature": 0.1,
+                              "boto_client_config": Config(connect_timeout=3, read_timeout=12,
+                                                           retries={"max_attempts": 1, "mode": "standard"})}
     if guardrail_id:
         kwargs.update(guardrail_id=guardrail_id, guardrail_version=guardrail_version or "DRAFT", guardrail_trace="enabled")
     model = BedrockModel(**kwargs)
 
+    down_until = [0.0]
+
     def run(claim_id: str, question: str) -> str:
+        import time  # noqa: PLC0415
+        from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+        if time.monotonic() < down_until[0]:
+            raise RuntimeError("model recently unavailable")
         agent = Agent(model=model, system_prompt=SYSTEM_PROMPT, tools=build_tools(get_detail))
-        return str(agent(f"Claim {claim_id}. Auditor question: {question}"))
+        pool = ThreadPoolExecutor(max_workers=1)
+        try:  # a tool loop can make several model calls; cap the whole answer
+            return str(pool.submit(agent, f"Claim {claim_id}. Auditor question: {question}").result(timeout=LLM_BUDGET_S))
+        except Exception:
+            down_until[0] = time.monotonic() + LLM_COOLDOWN_S
+            raise
+        finally:
+            pool.shutdown(wait=False)
 
     return run
 

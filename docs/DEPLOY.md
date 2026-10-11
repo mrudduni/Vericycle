@@ -1,4 +1,4 @@
-# Deploy runbook: OpenAEye MVP on AWS (ap-south-1)
+# Deploy runbook: OpenAEye MVP on AWS (ap-southeast-2)
 
 Two CDK apps, one AWS account. ChainTrack (`infra/chaintrack`) owns capture, ledger, Cognito and Cedar.
 ClaimGuard (`infra/claimguard`) owns claims, the review API and the dashboard. They share only SSM
@@ -8,30 +8,40 @@ Stages: `shaurya` and `mrudduni` for solo testing, `prod` for the demo. Never de
 
 ## 0. Before anything
 
-1. **AWS account fully registered.** Test: `aws s3api list-buckets --profile openaeye` must not say `NotSignedUp`, and
-   `aws lambda list-functions --region ap-south-1` must not say `SubscriptionRequiredException`.
-   If it does, finish registration at https://portal.aws.amazon.com/billing/signup.
-2. `aws login --profile openaeye` (browser). Sessions last 12 hours.
+1. **Account and region.** Account `206690614182`, region `ap-southeast-2` (Sydney), profile `openaeye` (CONTRACT §2, §10).
+   The account's organisation policy denies `ap-south-1`, Amazon Transcribe, Amazon Textract and End User Messaging
+   Social, so `prod` is deployed with voice off and without WhatsApp. Bedrock returned "account is being verified" on
+   10 Oct; extraction and the copilot fall back to their deterministic paths until it clears.
+2. `aws login --profile openaeye --region ap-southeast-2` (browser). Sessions last 12 hours.
 3. Budget alarm: AWS Billing → Budgets → alerts at $20, $50, $100.
-4. Bedrock model: Amazon Nova Lite is available in `ap-south-1` (`amazon.nova-lite-v1:0`). Check access in the Bedrock
-   console → Model access. Set it with `-c modelId=amazon.nova-lite-v1:0` on the Capture stack, then run
+4. Bedrock model: Amazon Nova Lite is available in `ap-southeast-2` (`amazon.nova-lite-v1:0`, or the
+   `apac.amazon.nova-lite-v1:0` profile). Test with
+   `aws bedrock-runtime converse --model-id amazon.nova-lite-v1:0 --messages '[{"role":"user","content":[{"text":"ok"}]}]' --profile openaeye`. Set it with `-c modelId=amazon.nova-lite-v1:0` on the Capture stack, then run
    `python scripts/chaintrack/run_eval.py --model amazon.nova-lite-v1:0 --profile openaeye`.
-5. Bootstrap once: `npx cdk bootstrap aws://773870812969/ap-south-1` (skip if `CDKToolkit` exists).
+5. Bootstrap once: `npx cdk bootstrap aws://206690614182/ap-southeast-2` (done; `CDKToolkit` exists).
 
 ## 1. Integrated demo stack (`prod`)
 
+ChainTrack in one command (bootstrap check, build, Core, CaptureWeb, Capture, seed, demo users, PWA, smoke test):
+
 ```bash
-export AWS_PROFILE=openaeye
+MODEL_ID=amazon.nova-lite-v1:0 OAE_VOICE=off bash scripts/chaintrack/deploy_all.sh prod
+```
+
+Or step by step:
+
+```bash
+export AWS_PROFILE=openaeye AWS_REGION=ap-southeast-2
 # ChainTrack first (it creates the table, Cognito pool and the Cedar store ClaimGuard reads)
 bash scripts/chaintrack/build_lambdas.sh
 cd infra/chaintrack && npm ci
 npx cdk deploy -c stage=prod OAE-Prod-Core OAE-Prod-CaptureWeb
 CAP=$(aws ssm get-parameter --name /openaeye/prod/capture/web-url --query Parameter.Value --output text)
 # Review web hosting must exist before CORS origins can be set: deploy it from the claimguard app first (step below), then:
-npx cdk deploy -c stage=prod -c webUrl=$CAP -c webOrigins=$CAP -c modelId=amazon.nova-lite-v1:0 OAE-Prod-Capture
+npx cdk deploy -c stage=prod -c webUrl=$CAP -c webOrigins=$CAP -c modelId=amazon.nova-lite-v1:0 -c voice=off OAE-Prod-Capture
 cd ../.. && python scripts/chaintrack/seed_demo.py --stage prod
 python scripts/chaintrack/create_demo_users.py --stage prod
-bash scripts/chaintrack/deploy_web.sh prod
+OAE_VOICE=off bash scripts/chaintrack/deploy_web.sh prod
 
 # ClaimGuard
 COPILOT=1 bash scripts/claimguard/build_lambdas.sh   # COPILOT=1 adds the Strands agent layer; omit for deterministic explanations only
@@ -76,11 +86,14 @@ in the claim-evidence bucket (or the capture bucket); the processor extracts EXI
 Needs a phone number that can receive an SMS or voice OTP and is **not** currently registered on the WhatsApp or
 WhatsApp Business app (delete that account first if it is). Do not commit the number to the repo.
 
-1. AWS console (region **Asia Pacific (Mumbai)**) → **End User Messaging Social** → **Link business account** →
+Not possible in account `206690614182`: its organisation policy denies End User Messaging Social. The PWA's
+WhatsApp-style chat runs the same pipeline. The steps below apply to an account that allows it.
+
+1. AWS console (region **Asia Pacific (Sydney)**) → **End User Messaging Social** → **Link business account** →
    **Launch Facebook portal**. Sign in to Facebook, create or choose a Meta Business portfolio, create a WhatsApp Business
    Account, **add the phone number**, enter the OTP. Pick a display name (Meta reviews it; use "OpenAEye").
 2. Back in the console, confirm the number shows **Active**. Get its identifiers:
-   `aws socialmessaging list-linked-whatsapp-business-accounts --region ap-south-1`
+   `aws socialmessaging list-linked-whatsapp-business-accounts --region ap-southeast-2`
    (copy the phone number ID, e.g. `phone-number-id-…`, and the full ARN).
 3. Redeploy ChainTrack with WhatsApp resources:
    `npx cdk deploy -c stage=prod … -c waPhoneNumberId=<phone-number-id ARN> -c waNumber=<digits only> OAE-Prod-Capture`
